@@ -32,30 +32,25 @@ export function CustomToast({
   hide,
   type = "info",
 }: CustomToastProps) {
-  const borderColorMap = {
-    success: "border-status-success",
-    error: "border-status-error",
-    info: "border-status-info",
-  };
-
   return (
     <TouchableOpacity
       activeOpacity={0.9}
       onPress={hide}
       className={`
-        w-[95%] max-w-[500px] bg-white rounded-xl shadow-card 
+        w-[95%] max-w-[500px] bg-white rounded-xl shadow-sharp 
+        border border-border
         border-l-8 ${borderColorMap[type]} my-2 overflow-hidden
       `}
       accessibilityRole="alert"
     >
       <View className="px-6 py-5">
         {text1 && (
-          <ThemedText className="font-bold text-xl text-surface-dark mb-2">
+          <ThemedText className="font-bold text-lg text-foreground mb-1">
             {text1}
           </ThemedText>
         )}
         {text2 && (
-          <ThemedText className="font-medium text-base text-surface-dark/70">
+          <ThemedText className="font-medium text-sm text-muted-foreground">
             {text2}
           </ThemedText>
         )}

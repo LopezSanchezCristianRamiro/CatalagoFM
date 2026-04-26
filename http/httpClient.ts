@@ -1,7 +1,8 @@
-import { getToken } from "../storage/storage";
+import { getToken } from "../storage/secureStorage";
 
 // Usa la URL del .env o fallback a localhost
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000";
+export const BASE_URL =
+  process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000";
 
 async function parseErrorMessage(
   res: Response,
@@ -31,7 +32,10 @@ async function request<T>(
     if (token) headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+  const res = await fetch(`${BASE_URL}${path}`, {
+    ...options,
+    headers: { ...headers, ...options.headers },
+  });
 
   if (!res.ok) {
     const message = await parseErrorMessage(res, fallback);
