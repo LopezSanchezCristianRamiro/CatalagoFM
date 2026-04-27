@@ -59,87 +59,101 @@ export default function LoginScreen() {
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
         enableOnAndroid={true}
-        extraScrollHeight={20} // opcional, para evitar que el campo quede muy pegado al teclado
+        extraScrollHeight={20}
       >
-        <View className="flex-1 justify-center px-8 pt-20 pb-10">
-          {/* Título – sin animate-slide-up */}
-          <View className="mb-10">
-            <ThemedText className="text-3xl font-bold mb-2">
-              Iniciar Sesión
-            </ThemedText>
-            <ThemedText className="text-base text-muted-foreground">
-              Ingresa tus credenciales para continuar
-            </ThemedText>
-          </View>
-          {/* Campo Usuario */}
-          <View className="mb-5">
-            <ThemedText className="text-sm font-medium mb-2">
-              Usuario o correo
-            </ThemedText>
-            <TextInput
-              className="w-full h-12 bg-white border border-border rounded-lg px-4 text-foreground text-base"
-              placeholder="Usuario"
-              placeholderTextColor="#A1A1AA"
-              autoCapitalize="none"
-              autoCorrect={false}
-              value={username}
-              onChangeText={setUsername}
-              editable={!loading}
-            />
-          </View>
-          {/* Campo Contraseña */}
-          <View className="relative">
-            <TextInput
-              className="w-full h-12 bg-white border border-border rounded-lg px-4 pr-12 text-foreground"
-              placeholder="Tu contraseña"
-              placeholderTextColor="#A1A1AA"
-              secureTextEntry={!showPassword}
-              value={password}
-              onChangeText={setPassword}
-              editable={!loading}
-              onSubmitEditing={handleLogin}
-            />
-            <TouchableOpacity
-              onPress={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-0 h-12 justify-center"
-              disabled={loading}
-            >
-              <Ionicons
-                name={showPassword ? "eye-off-outline" : "eye-outline"}
-                size={22}
-                color="#71717A"
-              />
-            </TouchableOpacity>
-          </View>
-          {/* Botón */}
-          <TouchableOpacity
-            className={`mt-6 btn-tap-active h-12 bg-primary rounded-lg items-center justify-center ${
-              loading ? "opacity-70" : ""
-            }`}
-            onPress={handleLogin}
-            disabled={loading}
-            activeOpacity={0.8}
-          >
-            {loading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <ThemedText className="text-primary-foreground text-base font-semibold">
+        {/* Contenedor centrado con ancho máximo */}
+        <View className="flex-1 justify-center items-center px-8 pt-20 pb-10">
+          <View className="w-full max-w-md">
+            {/* Título */}
+            <View className="mb-10">
+              <ThemedText className="text-3xl font-bold mb-2">
                 Iniciar Sesión
               </ThemedText>
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => router.push("/register")}
-            className="mt-6 items-center"
-            disabled={loading}
-          >
-            <ThemedText className="text-sm text-muted-foreground">
-              ¿No tienes cuenta?{" "}
-              <ThemedText className="font-semibold text-accent">
-                Regístrate
+              <ThemedText className="text-base text-muted-foreground">
+                Ingresa tus credenciales para continuar
               </ThemedText>
-            </ThemedText>
-          </TouchableOpacity>
+            </View>
+
+            {/* Campo Usuario */}
+            <View className="mb-5">
+              <ThemedText className="text-sm font-medium mb-2">
+                Usuario o correo
+              </ThemedText>
+              <TextInput
+                className="w-full h-12 bg-white border border-border rounded-lg px-4 text-foreground text-base"
+                placeholder="Usuario"
+                placeholderTextColor="#A1A1AA"
+                autoCapitalize="none"
+                autoCorrect={false}
+                value={username}
+                onChangeText={setUsername}
+                editable={!loading}
+              />
+            </View>
+
+            {/* Campo Contraseña */}
+            {/* Campo Contraseña */}
+            <View className="mb-5">
+              <ThemedText className="text-sm font-medium mb-2">
+                Contraseña
+              </ThemedText>
+              <View className="relative">
+                <TextInput
+                  className="w-full h-12 bg-white border border-border rounded-lg px-4 pr-12 text-foreground"
+                  placeholder="Tu contraseña"
+                  placeholderTextColor="#A1A1AA"
+                  secureTextEntry={!showPassword}
+                  value={password}
+                  onChangeText={setPassword}
+                  editable={!loading}
+                  onSubmitEditing={handleLogin}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-0 h-12 justify-center"
+                  disabled={loading}
+                >
+                  <Ionicons
+                    name={showPassword ? "eye-off-outline" : "eye-outline"}
+                    size={22}
+                    color="#71717A"
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Botón */}
+            <TouchableOpacity
+              className={`mt-6 btn-tap-active h-12 bg-primary rounded-lg items-center justify-center ${
+                loading ? "opacity-70" : ""
+              }`}
+              onPress={handleLogin}
+              disabled={loading}
+              activeOpacity={0.8}
+            >
+              {loading ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <ThemedText className="text-primary-foreground text-base font-semibold">
+                  Iniciar Sesión
+                </ThemedText>
+              )}
+            </TouchableOpacity>
+
+            {/* Enlace a registro */}
+            <TouchableOpacity
+              onPress={() => router.push("/register")}
+              className="mt-6 items-center"
+              disabled={loading}
+            >
+              <ThemedText className="text-sm text-muted-foreground">
+                ¿No tienes cuenta?{" "}
+                <ThemedText className="font-semibold text-accent">
+                  Regístrate
+                </ThemedText>
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
         </View>
       </KeyboardAwareScrollView>
     </View>

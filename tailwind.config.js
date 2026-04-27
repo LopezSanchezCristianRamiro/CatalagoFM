@@ -11,34 +11,34 @@ module.exports = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: "#000000",
+          DEFAULT: "#7C3AED", // violeta intenso (botones principales)
           foreground: "#FFFFFF",
         },
         secondary: {
-          DEFAULT: "#F4F4F5",
-          foreground: "#18181B",
+          DEFAULT: "#F5F3FF", // lavanda muy claro
+          foreground: "#4C1D95", // morado oscuro (texto sobre secundario)
         },
         accent: {
-          DEFAULT: "#18181B",
+          DEFAULT: "#6D28D9", // violeta oscuro (acentos, fondos activos sidebar)
           foreground: "#FFFFFF",
         },
-        background: "#FFFFFF",
-        foreground: "#000000",
+        background: "#FAFAFE", // casi blanco con matiz lavanda
+        foreground: "#1E1B4B", // texto principal: azul muy oscuro/morado
         card: {
           DEFAULT: "#FFFFFF",
-          foreground: "#000000",
+          foreground: "#1E1B4B",
         },
         muted: {
-          DEFAULT: "#F4F4F5",
-          foreground: "#71717A",
+          DEFAULT: "#EDE9FE", // violeta palidísimo
+          foreground: "#6B7280", // gris medio
         },
-        border: "#E4E4E7",
-        input: "#E4E4E7",
-        ring: "#000000",
+        border: "#E5E7EB",
+        input: "#E5E7EB",
+        ring: "#8B5CF6",
         status: {
-          success: "#22c55e",
-          error: "#ef4444",
-          info: "#3b82f6",
+          success: "#10B981",
+          error: "#EF4444",
+          info: "#6D28D9", // ahora violeta
         },
       },
       fontFamily: {

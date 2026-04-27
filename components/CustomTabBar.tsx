@@ -1,6 +1,8 @@
+// components/CustomTabBar.tsx
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-import { Text, TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ThemedText } from "./ThemedText";
 
 interface CustomTabBarProps extends BottomTabBarProps {
   isAdmin: boolean;
@@ -20,69 +22,73 @@ export function CustomTabBar({
     (route) => !(!isAdmin && ADMIN_ONLY_ROUTES.includes(route.name)),
   );
 
+  // Colores de la paleta Lavanda Eléctrica
+  const activeColor = "#7C3AED"; // primary (violeta)
+  const inactiveColor = "#6B7280"; // muted-foreground
+
   return (
     <View
-      className="flex-row bg-white border-t border-border"
+      className="bg-card border-t border-border"
       style={{
         paddingBottom: insets.bottom + 5,
         paddingTop: 5,
         height: 60 + insets.bottom,
       }}
     >
-      {filteredRoutes.map((route, index) => {
-        const { options } = descriptors[route.key];
-        const isFocused = state.index === state.routes.indexOf(route);
+      <View className="flex-row">
+        {filteredRoutes.map((route) => {
+          const { options } = descriptors[route.key];
+          const isFocused = state.index === state.routes.indexOf(route);
 
-        const onPress = () => {
-          const event = navigation.emit({
-            type: "tabPress",
-            target: route.key,
-            canPreventDefault: true,
-          });
+          const onPress = () => {
+            const event = navigation.emit({
+              type: "tabPress",
+              target: route.key,
+              canPreventDefault: true,
+            });
 
-          if (!isFocused && !event.defaultPrevented) {
-            navigation.navigate(route.name);
-          }
-        };
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name);
+            }
+          };
 
-        const color = isFocused ? "#000000" : "#71717A";
-        const iconName = options.tabBarIcon
-          ? (options.tabBarIcon as any)({ color, size: 24 })
-          : null;
+          const iconColor = isFocused ? activeColor : inactiveColor;
 
-        // Obtener la etiqueta como cadena
-        const label =
-          typeof options.tabBarLabel === "function"
-            ? options.tabBarLabel({
-                focused: isFocused,
-                color,
-                position: "below-icon",
-                children: "",
-              })
-            : (options.tabBarLabel ?? route.name);
+          const icon = options.tabBarIcon
+            ? (options.tabBarIcon as any)({ color: iconColor, size: 24 })
+            : null;
 
-        return (
-          <TouchableOpacity
-            key={route.key}
-            accessibilityRole="button"
-            accessibilityState={isFocused ? { selected: true } : {}}
-            onPress={onPress}
-            className="flex-1 items-center justify-center"
-            style={{ paddingVertical: 4 }}
-          >
-            {iconName}
-            <Text
-              style={{
-                color,
-                fontSize: 12,
-                fontWeight: "600",
-              }}
+          const label =
+            typeof options.tabBarLabel === "function"
+              ? options.tabBarLabel({
+                  focused: isFocused,
+                  color: iconColor,
+                  position: "below-icon",
+                  children: "",
+                })
+              : (options.tabBarLabel ?? route.name);
+
+          return (
+            <TouchableOpacity
+              key={route.key}
+              accessibilityRole="button"
+              accessibilityState={isFocused ? { selected: true } : {}}
+              onPress={onPress}
+              className="flex-1 items-center justify-center"
+              style={{ paddingVertical: 4 }}
             >
-              {label}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
+              {icon}
+              <ThemedText
+                className={`text-xs font-semibold ${
+                  isFocused ? "text-primary" : "text-muted-foreground"
+                }`}
+              >
+                {label}
+              </ThemedText>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     </View>
   );
 }

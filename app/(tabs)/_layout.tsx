@@ -1,33 +1,46 @@
 // app/(tabs)/_layout.tsx
 import { Ionicons } from "@expo/vector-icons";
-import { Redirect, Tabs } from "expo-router";
+import { Tabs } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
 import { CustomTabBar } from "../../components/CustomTabBar";
+import { Sidebar } from "../../components/Sidebar";
 import { useAuth } from "../../contexts/AuthContext";
+import { useResponsive } from "../../hooks/useResponsive";
 
 export default function TabsLayout() {
   const { user, loading, isAdmin } = useAuth();
+  const { isDesktop } = useResponsive();
 
   if (loading) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator size="large" color="#000" />
+        <ActivityIndicator size="large" color="#7C3AED" />
       </View>
     );
   }
 
-  if (!user) {
-    return <Redirect href="/login" />;
+  // ===== ESCRITORIO: sidebar + contenido =====
+  if (isDesktop) {
+    return (
+      <View className="flex-1 flex-row bg-background">
+        <Sidebar isAdmin={isAdmin} />
+        <Tabs tabBar={() => null} screenOptions={{ headerShown: false }}>
+          <Tabs.Screen name="catalogo" options={{ title: "Catálogo" }} />
+          <Tabs.Screen name="carrito" options={{ title: "Carrito" }} />
+          <Tabs.Screen name="perfil" options={{ title: "Perfil" }} />
+          <Tabs.Screen name="productos" options={{ title: "Productos" }} />
+          <Tabs.Screen name="administracion" options={{ title: "Dueño" }} />
+        </Tabs>
+      </View>
+    );
   }
 
+  // ===== MÓVIL: tabs inferiores =====
   return (
     <Tabs
       tabBar={(props) => <CustomTabBar {...props} isAdmin={isAdmin} />}
-      screenOptions={{
-        headerShown: false,
-      }}
+      screenOptions={{ headerShown: false }}
     >
-      {/* Públicas */}
       <Tabs.Screen
         name="catalogo"
         options={{
@@ -55,7 +68,6 @@ export default function TabsLayout() {
           ),
         }}
       />
-      {/* Admin (siempre registradas, la barra las oculta si no es admin) */}
       <Tabs.Screen
         name="productos"
         options={{

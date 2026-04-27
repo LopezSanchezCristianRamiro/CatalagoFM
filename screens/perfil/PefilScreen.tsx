@@ -32,7 +32,7 @@ export default function PerfilScreen() {
   if (loading) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator size="large" color="#000" />
+        <ActivityIndicator size="large" color="#7C3AED" />
       </View>
     );
   }
@@ -40,57 +40,69 @@ export default function PerfilScreen() {
   if (!user) {
     return (
       <View className="flex-1 items-center justify-center bg-background p-8">
-        <ThemedText className="text-xl">No has iniciado sesión</ThemedText>
+        <View className="w-full max-w-md items-center">
+          <ThemedText className="text-xl">No has iniciado sesión</ThemedText>
+          <TouchableOpacity
+            className="mt-4 h-12 bg-primary rounded-lg items-center justify-center px-6"
+            onPress={() => router.replace("/login")}
+          >
+            <ThemedText className="text-primary-foreground text-base font-semibold">
+              Iniciar Sesión
+            </ThemedText>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-background px-6 pt-16">
-      {/* Avatar genérico */}
-      <View className="w-24 h-24 bg-muted rounded-full items-center justify-center self-center mb-6">
-        <ThemedText className="text-3xl font-bold text-muted-foreground">
-          {user.nombres?.charAt(0)?.toUpperCase() ?? "U"}
+    <View className="flex-1 bg-background items-center px-6 pt-16">
+      <View className="w-full max-w-md">
+        {/* Avatar genérico */}
+        <View className="w-24 h-24 bg-muted rounded-full items-center justify-center self-center mb-6">
+          <ThemedText className="text-3xl font-bold text-muted-foreground">
+            {user.nombres?.charAt(0)?.toUpperCase() ?? "U"}
+          </ThemedText>
+        </View>
+
+        <ThemedText className="text-2xl font-bold text-center mb-2">
+          {user.nombres}
         </ThemedText>
-      </View>
+        <ThemedText className="text-base text-muted-foreground text-center mb-6">
+          @{user.nombreUsuario}
+        </ThemedText>
 
-      <ThemedText className="text-2xl font-bold text-center mb-2">
-        {user.nombres}
-      </ThemedText>
-      <ThemedText className="text-base text-muted-foreground text-center mb-6">
-        @{user.nombreUsuario}
-      </ThemedText>
-
-      <View className="bg-white rounded-xl border border-border p-4 mb-6">
-        <View className="flex-row justify-between py-2 border-b border-border">
-          <ThemedText className="text-sm font-medium">Correo</ThemedText>
-          <ThemedText className="text-sm text-muted-foreground">
-            {user.correo}
-          </ThemedText>
+        <View className="bg-white rounded-xl border border-border p-4 mb-6">
+          <View className="flex-row justify-between py-2 border-b border-border">
+            <ThemedText className="text-sm font-medium">Correo</ThemedText>
+            <ThemedText className="text-sm text-muted-foreground">
+              {user.correo}
+            </ThemedText>
+          </View>
+          <View className="flex-row justify-between py-2">
+            <ThemedText className="text-sm font-medium">Rol</ThemedText>
+            <ThemedText className="text-sm text-muted-foreground">
+              {user.rol}
+            </ThemedText>
+          </View>
         </View>
-        <View className="flex-row justify-between py-2">
-          <ThemedText className="text-sm font-medium">Rol</ThemedText>
-          <ThemedText className="text-sm text-muted-foreground">
-            {user.rol}
-          </ThemedText>
-        </View>
-      </View>
 
-      <TouchableOpacity
-        className={`btn-tap-active h-12 bg-primary rounded-lg items-center justify-center ${
-          loggingOut ? "opacity-70" : ""
-        }`}
-        onPress={handleLogout}
-        disabled={loggingOut}
-      >
-        {loggingOut ? (
-          <ActivityIndicator color="#FFFFFF" />
-        ) : (
-          <ThemedText className="text-primary-foreground text-base font-semibold">
-            Cerrar sesión
-          </ThemedText>
-        )}
-      </TouchableOpacity>
+        <TouchableOpacity
+          className={`btn-tap-active h-12 bg-primary rounded-lg items-center justify-center ${
+            loggingOut ? "opacity-70" : ""
+          }`}
+          onPress={handleLogout}
+          disabled={loggingOut}
+        >
+          {loggingOut ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <ThemedText className="text-primary-foreground text-base font-semibold">
+              Cerrar sesión
+            </ThemedText>
+          )}
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }

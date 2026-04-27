@@ -8,7 +8,7 @@ import "../global.css";
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <StatusBar style="dark" backgroundColor="#FFFFFF" />
+      <StatusBar style="dark" backgroundColor="#FAFAFE" />
       <Stack screenOptions={{ headerShown: false }} />
       <Toaster />
     </AuthProvider>
