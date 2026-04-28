@@ -7,13 +7,10 @@ export const useResponsive = () => {
   const isTablet = Platform.OS === "web" && width >= 768 && width < 1024;
   const isDesktop = Platform.OS === "web" && width >= 1024;
 
-  const isPermanentDrawer = isDesktop;
-
   return {
     isMobile,
     isTablet,
     isDesktop,
-    isPermanentDrawer,
     width,
   };
 };
