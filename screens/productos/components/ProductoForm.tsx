@@ -211,9 +211,15 @@ useImperativeHandle(ref, () => ({
       Imágenes seleccionadas
     </ThemedText>
 
-    <ThemedText className="text-slate-500 text-xs mb-3">
-      La primera imagen será la principal del producto.
-    </ThemedText>
+ <ThemedText className="text-slate-500 text-xs">
+  La primera imagen será la principal del producto.
+</ThemedText>
+
+<ThemedText className="text-purple-700 text-xs mt-1 mb-3 font-semibold">
+  {productoEditando
+    ? "Para agregar más imágenes, vuelve a tocar el recuadro de arriba. No se borrarán las actuales."
+    : "Puedes tocar el recuadro de arriba para seleccionar una o varias imágenes."}
+</ThemedText>
 
     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
       <View className="flex-row gap-3">
