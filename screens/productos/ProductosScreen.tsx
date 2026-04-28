@@ -35,7 +35,7 @@ const [productoEditando, setProductoEditando] = useState<Producto | null>(null);
   const [categoriaEditando, setCategoriaEditando] = useState<Categoria | null>(
     null
   );
-
+const [categoriaAnimandoBoton, setCategoriaAnimandoBoton] = useState<number | null>(null);
   const [productoEliminar, setProductoEliminar] = useState<number | null>(null);
   const [productoAnimandoEliminar, setProductoAnimandoEliminar] = useState<
     number | null
@@ -320,18 +320,18 @@ const [productoEditando, setProductoEditando] = useState<Producto | null>(null);
                         />
                       </Pressable>
 
-                      <Pressable
-                        onPress={() =>
-                          confirmarEliminarCategoria(cat.idCategoria)
-                        }
-                        className="w-9 h-9 rounded-full bg-red-50 items-center justify-center"
-                      >
-                        <Ionicons
-                          name="trash-outline"
-                          size={18}
-                          color="#ef4444"
-                        />
-                      </Pressable>
+                    <Pressable
+  onPress={() =>
+    confirmarEliminarCategoria(cat.idCategoria)
+  }
+  className="w-9 h-9 rounded-full bg-red-50 items-center justify-center"
+>
+  <Ionicons
+    name="trash-outline"
+    size={18}
+    color="#ef4444"
+  />
+</Pressable>
                     </View>
                   </View>
                 ))

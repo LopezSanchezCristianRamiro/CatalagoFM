@@ -150,11 +150,11 @@ export default function ProductoCard({
           )}
         </View>
 
-        <View className={`flex-row ${isMobile ? "gap-2" : "gap-3"}`}>
+        <View className={`flex-row ${isMobile ? "gap-3" : "gap-4"}`}>
           <Pressable
             onPress={() => onEdit(producto)}
             disabled={deleting}
-            className={`${isMobile ? "w-10 h-10" : "w-11 h-11"} bg-slate-100 rounded-xl items-center justify-center`}
+            className={`${isMobile ? "w-12 h-12" : "w-11 h-11"} bg-slate-100 rounded-xl items-center justify-center`}
           >
             <Ionicons name="pencil" size={18} color="#111827" />
           </Pressable>
@@ -162,7 +162,7 @@ export default function ProductoCard({
           <Pressable
             onPress={() => onViewImages(producto)}
             disabled={deleting}
-            className={`${isMobile ? "w-10 h-10" : "w-11 h-11"} bg-purple-50 rounded-xl items-center justify-center`}
+            className={`${isMobile ? "w-12 h-12" : "w-11 h-11"} bg-purple-50 rounded-xl items-center justify-center`}
           >
             <Ionicons name="images-outline" size={19} color="#7e22ce" />
           </Pressable>
@@ -170,7 +170,7 @@ export default function ProductoCard({
           <Pressable
             onPress={handleDelete}
             disabled={eliminando || deleting}
-            className={`${isMobile ? "w-10 h-10" : "w-11 h-11"} bg-red-50 rounded-xl items-center justify-center`}
+            className={`${isMobile ? "w-12 h-12" : "w-11 h-11"} bg-red-50 rounded-xl items-center justify-center`}
           >
             <Animated.View
               style={{

@@ -82,24 +82,7 @@ const [formValido, setFormValido] = useState(false);
           </ScrollView>
 
           <View className="flex-row justify-end gap-3 px-6 py-4 bg-white border-t border-slate-200">
-            <Pressable
-  onPress={onClose}
-  disabled={guardando}
-  className={`rounded-full px-8 py-3 border ${
-    guardando
-      ? "bg-slate-100 border-slate-200 opacity-35"
-      : "bg-white border-slate-300 opacity-100"
-  }`}
->
-  <ThemedText
-    className={`font-bold ${
-      guardando ? "text-slate-400" : "text-slate-700"
-    }`}
-  >
-    Descartar
-  </ThemedText>
-</Pressable>
-
+           
             <Pressable
   onPress={handleGuardar}
   disabled={guardando || !formValido}
