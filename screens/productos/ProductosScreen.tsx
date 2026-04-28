@@ -295,7 +295,7 @@ const [categoriaAnimandoBoton, setCategoriaAnimandoBoton] = useState<number | nu
                     <View className="w-[20%]">
                       <View className="w-11 h-11 rounded-xl bg-slate-100 items-center justify-center">
                         <Ionicons
-                          name="grid-outline"
+                          name="cube-outline"
                           size={20}
                           color="#0f172a"
                         />
@@ -563,7 +563,7 @@ const [categoriaAnimandoBoton, setCategoriaAnimandoBoton] = useState<number | nu
                 </ThemedText>
               </View>
 
-              <Ionicons name="cube-outline" size={20} color="#64748b" />
+              <Ionicons name="cube" size={20} color="#64748b" />
             </View>
           ))}
         </ScrollView>

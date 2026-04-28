@@ -170,15 +170,15 @@ useImperativeHandle(ref, () => ({
 }));
 
   return (
-    <View className="bg-[#fcf7f7] rounded-3xl p-6 border border-slate-200 shadow-lg">
+    <View className="p-6">
       <ThemedText className="text-slate-900 text-2xl font-bold mb-6">
-        {productoEditando ? "Editar App" : "Nueva App"}
+        {productoEditando ? "Editar Producto" : "Registrar Nuevo Producto"}
       </ThemedText>
 
       <View className="flex-row flex-wrap gap-8">
         <View className="w-56">
           <ThemedText className="text-slate-900 text-xs font-bold mb-3">
-            LOGO DE LA APP
+            LOGO DEL PRODUCTO
           </ThemedText>
 
           <Pressable
@@ -296,7 +296,7 @@ useImperativeHandle(ref, () => ({
         <View className="flex-1 min-w-[280px] gap-4">
           <View>
             <ThemedText className="text-slate-900 text-xs font-semibold mb-2">
-              Título de la App
+              Título del producto
             </ThemedText>
             <TextInput
               value={nombre}
