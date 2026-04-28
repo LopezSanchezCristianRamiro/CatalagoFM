@@ -166,18 +166,27 @@ const [productoEditando, setProductoEditando] = useState<Producto | null>(null);
   };
 
   return (
-    <View className="flex-1 bg-[#fff8f8]">
-      <ScrollView className="flex-1">
-        <View
-          className={`w-full self-center px-4 py-6 ${
-            isMobile ? "" : "max-w-[900px]"
-          }`}
-        >
-         <SearchBar
-  value={busqueda}
-  onChangeText={setBusqueda}
-  placeholder="Buscar aplicaciones o categorías..."
-/>
+    <View className="flex-1 bg-white border-b border-slate-200">
+      <View className="pt-12 px-4 pb-3 bg-white border-b border-slate-200 z-20">
+  <SearchBar
+    value={busqueda}
+    onChangeText={setBusqueda}
+    placeholder="Buscar aplicaciones o categorías..."
+  />
+</View>
+
+<ScrollView
+  className="flex-1"
+  contentContainerStyle={{
+    paddingHorizontal: 16,
+    paddingBottom: 120,
+  }}
+>
+       <View
+  className={`w-full self-center py-6 ${
+    isMobile ? "" : "max-w-[900px]"
+  }`}
+> 
 
           <View className="flex-row border-b border-purple-200 mb-6">
             <Pressable
