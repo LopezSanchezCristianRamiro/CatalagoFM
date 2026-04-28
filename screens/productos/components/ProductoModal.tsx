@@ -48,18 +48,29 @@ const [formValido, setFormValido] = useState(false);
               {productoEditando ? "Editar producto" : "Nuevo producto"}
             </ThemedText>
 
-            <Pressable
-              onPress={onClose}
-              disabled={guardando}
-              className="w-10 h-10 rounded-full bg-slate-100 items-center justify-center"
-            >
-              <ThemedText className="text-slate-950 text-xl font-bold">
-                ×
-              </ThemedText>
-            </Pressable>
+       <Pressable
+  onPress={onClose}
+  disabled={guardando}
+  className={`rounded-full px-8 py-3 border ${
+    guardando
+      ? "bg-slate-100 border-slate-200 opacity-35"
+      : "bg-white border-slate-900 opacity-100"
+  }`}
+>
+  <ThemedText
+    className={`font-bold ${
+      guardando ? "text-slate-400" : "text-slate-700"
+    }`}
+  >
+    Cerrar Ventana
+  </ThemedText>
+</Pressable>
           </View>
 
-          <ScrollView className="flex-1 p-4">
+          <ScrollView
+  className="flex-1 p-4"
+  scrollEnabled={!guardando}
+>
             <ProductoForm
                ref={formRef}
   categorias={categorias}
@@ -72,14 +83,22 @@ const [formValido, setFormValido] = useState(false);
 
           <View className="flex-row justify-end gap-3 px-6 py-4 bg-white border-t border-slate-200">
             <Pressable
-              onPress={onClose}
-              disabled={guardando}
-              className="bg-white border border-slate-300 rounded-full px-8 py-3"
-            >
-              <ThemedText className="text-slate-700 font-bold">
-                Descartar
-              </ThemedText>
-            </Pressable>
+  onPress={onClose}
+  disabled={guardando}
+  className={`rounded-full px-8 py-3 border ${
+    guardando
+      ? "bg-slate-100 border-slate-200 opacity-35"
+      : "bg-white border-slate-300 opacity-100"
+  }`}
+>
+  <ThemedText
+    className={`font-bold ${
+      guardando ? "text-slate-400" : "text-slate-700"
+    }`}
+  >
+    Descartar
+  </ThemedText>
+</Pressable>
 
             <Pressable
   onPress={handleGuardar}
@@ -97,6 +116,20 @@ const [formValido, setFormValido] = useState(false);
               )}
             </Pressable>
           </View>
+           {guardando && (
+            <View className="absolute inset-0 bg-white/70 rounded-3xl items-center justify-center z-50">
+              <ActivityIndicator size="large" color="#7e22ce" />
+
+              <ThemedText className="text-slate-700 font-bold mt-4">
+                Guardando producto...
+              </ThemedText>
+
+              <ThemedText className="text-slate-500 text-sm mt-1">
+                Espera un momento
+              </ThemedText>
+            </View>
+          )}
+        
         </View>
       </View>
     </Modal>
