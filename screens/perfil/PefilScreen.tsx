@@ -115,7 +115,7 @@ export default function PerfilScreen() {
         text1: "Sesión cerrada",
         text2: "Vuelve pronto",
       });
-      router.replace("/login");
+      router.replace("/catalogo");
     } catch {
       Toast.show({
         type: "error",

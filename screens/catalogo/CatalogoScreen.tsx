@@ -79,29 +79,16 @@ export default function CatalogoScreen() {
     },
     [loadingProductos, productos.length, loadMore],
   );
+
   const minWidth = 300;
   const maxWidth = 350;
+
   return (
     <View style={{ flex: 1 }} className="bg-background">
-      {/* Header fijo */}
-      <View className="pt-6 px-4">
-        <ThemedText className="text-3xl font-bold text-foreground leading-tight text-center mb-4">
-          Catálogo{"\n"}Digital
-        </ThemedText>
-
-        <FilterBar
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          categorias={categorias}
-          categoriaActiva={categoriaActiva}
-          setCategoriaActiva={setCategoriaActiva}
-        />
-      </View>
-
       <ScrollView
         ref={scrollViewRef}
         contentContainerStyle={{
-          paddingHorizontal: 16,
+          // QUITAMOS el paddingHorizontal aquí para que el carrusel ocupe toda la pantalla
           paddingBottom: 20,
         }}
         onScroll={handleScroll}
@@ -116,7 +103,7 @@ export default function CatalogoScreen() {
           />
         }
       >
-        {/* Carrusel de promociones */}
+        {/* Carrusel de promociones (Ahora ocupa el 100% del ancho) */}
         {promociones.length > 0 && (
           <PromoCarousel
             promociones={promociones}
@@ -126,9 +113,20 @@ export default function CatalogoScreen() {
           />
         )}
 
+        {/* Barra de filtros con padding restaurado */}
+        <View className="pt-6 px-4">
+          <FilterBar
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            categorias={categorias}
+            categoriaActiva={categoriaActiva}
+            setCategoriaActiva={setCategoriaActiva}
+          />
+        </View>
+
         {/* Estados de carga y vacío */}
         {showSpinnerInList && (
-          <View className="py-20 items-center">
+          <View className="py-20 px-4 items-center">
             <ActivityIndicator size="large" color="#7C3AED" />
             <ThemedText className="mt-4 text-muted-foreground">
               Buscando productos...
@@ -137,18 +135,18 @@ export default function CatalogoScreen() {
         )}
 
         {!loadingInit && !showSpinnerInList && productos.length === 0 && (
-          <View className="py-20 items-center">
+          <View className="py-20 px-4 items-center">
             <ThemedText className="text-muted-foreground">
               No se encontraron productos.
             </ThemedText>
           </View>
         )}
 
-        {/* Grid fluido estilo Metasoft */}
+        {/* Grid fluido estilo Metasoft con padding restaurado */}
         {productos.length > 0 && (
           <>
             <View
-              className="flex-row flex-wrap justify-center"
+              className="flex-row flex-wrap justify-center px-4"
               style={{ gap: 8 }}
             >
               {productos.map((item) => (
@@ -156,8 +154,8 @@ export default function CatalogoScreen() {
                   key={item.idProducto.toString()}
                   className="flex-1"
                   style={{
-                    minWidth: minWidth, // en vez de 150
-                    maxWidth: maxWidth, // en vez de 280
+                    minWidth: minWidth,
+                    maxWidth: maxWidth,
                   }}
                 >
                   <ProductGridCard
