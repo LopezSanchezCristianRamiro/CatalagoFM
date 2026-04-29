@@ -2,6 +2,7 @@
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { CartBadge } from "./CartBadge";
 import { ThemedText } from "./ThemedText";
 
 interface CustomTabBarProps extends BottomTabBarProps {
@@ -67,6 +68,8 @@ export function CustomTabBar({
                   children: "",
                 })
               : (options.tabBarLabel ?? route.name);
+            
+          const CART_ROUTE = "carrito"; 
 
           return (
             <TouchableOpacity
@@ -77,7 +80,10 @@ export function CustomTabBar({
               className="flex-1 items-center justify-center"
               style={{ paddingVertical: 4 }}
             >
-              {icon}
+              <View style={{ position: "relative" }}>
+                {icon}
+                {route.name === CART_ROUTE && <CartBadge />}
+              </View>
               <ThemedText
                 className={`text-xs font-semibold ${
                   isFocused ? "text-primary" : "text-muted-foreground"

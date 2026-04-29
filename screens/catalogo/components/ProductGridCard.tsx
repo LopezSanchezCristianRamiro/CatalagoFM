@@ -73,10 +73,10 @@ export function ProductGridCard({
             </View>
 
             <TouchableOpacity
-              onPress={handleAddToCart}
-              className="bg-primary w-8 h-8 rounded-full items-center justify-center"
+              onPress={() => addToCart(producto)} 
+              className="absolute bottom-2 right-2 bg-violet-600 rounded-full w-8 h-8 items-center justify-center"
             >
-              <Ionicons name="add" size={20} color="#FFFFFF" />
+              <ThemedText className="text-white font-bold text-lg">+</ThemedText>
             </TouchableOpacity>
           </View>
         </View>

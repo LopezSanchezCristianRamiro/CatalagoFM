@@ -2,7 +2,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { usePathname, useRouter } from "expo-router";
-import { useState } from "react"; // ← añadir useState
+import { useState } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -13,6 +13,7 @@ import {
 import Toast from "react-native-toast-message";
 import { useAuth } from "../contexts/AuthContext";
 import { httpClient } from "../http/httpClient";
+import { useCartStore } from "../store/cartStore"; // 👈 1. IMPORT FALTABA
 import { ThemedText } from "./ThemedText";
 
 interface SidebarProps {
@@ -20,50 +21,34 @@ interface SidebarProps {
 }
 
 const ROUTES = [
-  {
-    name: "catalogo",
-    label: "Catálogo",
-    icon: "grid-outline",
-    adminOnly: false,
-  },
+  { name: "catalogo", label: "Catálogo", icon: "grid-outline", adminOnly: false },
   { name: "carrito", label: "Carrito", icon: "cart-outline", adminOnly: false },
   { name: "perfil", label: "Perfil", icon: "person-outline", adminOnly: false },
-  {
-    name: "productos",
-    label: "Productos",
-    icon: "add-circle-outline",
-    adminOnly: true,
-  },
-  {
-    name: "administracion",
-    label: "Dueño",
-    icon: "bar-chart-outline",
-    adminOnly: true,
-  },
+  { name: "productos", label: "Productos", icon: "add-circle-outline", adminOnly: true },
+  { name: "administracion", label: "Dueño", icon: "bar-chart-outline", adminOnly: true },
 ];
 
 export function Sidebar({ isAdmin }: SidebarProps) {
   const { user, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const [loggingOut, setLoggingOut] = useState(false); // ← nuevo estado
+  const [loggingOut, setLoggingOut] = useState(false);
+  const cartTotal = useCartStore((s) => // 👈 2. ESTO YA ESTABA PERO SIN IMPORT
+    s.items.reduce((acc, i) => acc + i.cantidad, 0)
+  );
 
   const activeColor = "#FFFFFF";
   const inactiveColor = "#000";
 
   const handleLogout = async () => {
-    setLoggingOut(true); // activamos el spinner
+    setLoggingOut(true);
     try {
       await httpClient.postAuth("/api/logout", {});
     } catch (e) {}
     await logout();
-    Toast.show({
-      type: "success",
-      text1: "Sesión cerrada",
-      text2: "Vuelve pronto",
-    });
+    Toast.show({ type: "success", text1: "Sesión cerrada", text2: "Vuelve pronto" });
     router.replace("/login");
-    setLoggingOut(false); // por si acaso, aunque la redirección lo desmonta
+    setLoggingOut(false);
   };
 
   const filtered = ROUTES.filter((r) => !r.adminOnly || isAdmin);
@@ -71,7 +56,6 @@ export function Sidebar({ isAdmin }: SidebarProps) {
   return (
     <View className="bg-secondary w-[220px] h-full border-r border-border pt-12 px-4">
       <ScrollView>
-        {/* Perfil (igual que antes) */}
         <View className="mb-6 px-2 items-center">
           <Image
             source={require("../assets/images/logo.jpg")}
@@ -82,7 +66,7 @@ export function Sidebar({ isAdmin }: SidebarProps) {
             Streaming App
           </ThemedText>
         </View>
-        {/* Navegación (sin cambios) */}
+
         <View className="mb-4">
           {filtered.map((item) => {
             const isActive = pathname?.includes(item.name);
@@ -95,11 +79,37 @@ export function Sidebar({ isAdmin }: SidebarProps) {
                 }`}
                 accessibilityRole="button"
               >
-                <Ionicons
-                  name={item.icon as any}
-                  size={20}
-                  color={isActive ? activeColor : inactiveColor}
-                />
+                {/* 👇 3. ESTO ES LO NUEVO - ícono con badge */}
+                <View style={{ position: "relative" }}>
+                  <Ionicons
+                    name={item.icon as any}
+                    size={20}
+                    color={isActive ? activeColor : inactiveColor}
+                  />
+                  {item.name === "carrito" && cartTotal > 0 && (
+                    <View
+                      style={{
+                        position: "absolute",
+                        top: -5,
+                        right: -7,
+                        backgroundColor: "#7C3AED",
+                        borderRadius: 999,
+                        minWidth: 16,
+                        height: 16,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        paddingHorizontal: 3,
+                        borderWidth: 1.5,
+                        borderColor: "white",
+                      }}
+                    >
+                      <Text style={{ color: "white", fontSize: 9, fontWeight: "bold" }}>
+                        {cartTotal > 99 ? "99+" : cartTotal}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+
                 <Text
                   className={`ml-3 text-base font-medium ${
                     isActive ? "text-white" : "text-foreground"
@@ -111,12 +121,12 @@ export function Sidebar({ isAdmin }: SidebarProps) {
             );
           })}
         </View>
-        {/* Cerrar sesión (MODIFICADO) */}
+
         {user && (
           <View className="border-t border-border pt-4 mt-2">
             <TouchableOpacity
               onPress={handleLogout}
-              disabled={loggingOut} // deshabilitamos mientras se está cerrando sesión
+              disabled={loggingOut}
               className={`flex-row items-center px-3 py-2 ${loggingOut ? "opacity-70" : ""}`}
             >
               {loggingOut ? (
