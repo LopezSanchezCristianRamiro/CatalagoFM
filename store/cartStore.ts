@@ -1,46 +1,64 @@
 import { create } from "zustand";
 
-// Definimos una interfaz base. Si ya tienes producto.types.ts,
-// puedes importarla en tu proyecto real.
-export interface Producto {
-  id: string;
+export interface ProductoCart {
+  idProducto: number;
   nombre: string;
-  descripcion: string;
   precio: number;
-  imagenUrl: string;
-  categoriaId: string;
+  precioDescuento: number | null;
+  fotos: { urlFoto: string | null }[];
 }
 
-export interface CartItem extends Producto {
+export interface CartItem extends ProductoCart {
   cantidad: number;
 }
 
 interface CartStore {
   items: CartItem[];
-  addToCart: (producto: Producto) => void;
-  removeFromCart: (productoId: string) => void;
+  addToCart: (producto: ProductoCart) => void;
+  removeFromCart: (idProducto: number) => void;
+  updateCantidad: (idProducto: number, cantidad: number) => void;
   clearCart: () => void;
+  getTotal: () => number;
 }
 
-export const useCartStore = create<CartStore>((set) => ({
+export const useCartStore = create<CartStore>((set, get) => ({
   items: [],
+
   addToCart: (producto) =>
     set((state) => {
-      const existingItem = state.items.find((item) => item.id === producto.id);
-      if (existingItem) {
+      const existe = state.items.find((i) => i.idProducto === producto.idProducto);
+      if (existe) {
         return {
-          items: state.items.map((item) =>
-            item.id === producto.id
-              ? { ...item, cantidad: item.cantidad + 1 }
-              : item,
+          items: state.items.map((i) =>
+            i.idProducto === producto.idProducto
+              ? { ...i, cantidad: i.cantidad + 1 }
+              : i
           ),
         };
       }
       return { items: [...state.items, { ...producto, cantidad: 1 }] };
     }),
-  removeFromCart: (productoId) =>
+
+  removeFromCart: (idProducto) =>
     set((state) => ({
-      items: state.items.filter((item) => item.id !== productoId),
+      items: state.items.filter((i) => i.idProducto !== idProducto),
     })),
+
+  updateCantidad: (idProducto, cantidad) =>
+    set((state) => ({
+      items:
+        cantidad <= 0
+          ? state.items.filter((i) => i.idProducto !== idProducto)
+          : state.items.map((i) =>
+              i.idProducto === idProducto ? { ...i, cantidad } : i
+            ),
+    })),
+
   clearCart: () => set({ items: [] }),
+
+  getTotal: () =>
+    get().items.reduce((acc, item) => {
+      const precio = item.precioDescuento ?? item.precio;
+      return acc + precio * item.cantidad;
+    }, 0),
 }));
