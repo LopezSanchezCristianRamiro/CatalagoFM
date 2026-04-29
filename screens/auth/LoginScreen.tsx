@@ -61,6 +61,12 @@ export default function LoginScreen() {
         enableOnAndroid={true}
         extraScrollHeight={20}
       >
+        <TouchableOpacity
+          onPress={() => router.back()}
+          className="absolute top-12 left-4 z-10 w-10 h-10 items-center justify-center rounded-full bg-white/80"
+        >
+          <Ionicons name="arrow-back" size={24} color="#1E1B4B" />
+        </TouchableOpacity>
         {/* Contenedor centrado con ancho máximo */}
         <View className="flex-1 justify-center items-center px-8 pt-20 pb-10">
           <View className="w-full max-w-md">

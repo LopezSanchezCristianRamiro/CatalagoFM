@@ -1,3 +1,4 @@
+import { LinearGradient } from "expo-linear-gradient"; // Asegúrate de tenerlo instalado
 import React, { useState } from "react";
 import {
   Image,
@@ -15,17 +16,18 @@ interface PromoCarouselProps {
   onPressPromo: (producto: ProductoCatalogo) => void;
 }
 
-const CAROUSEL_HEIGHT_MOBILE = 192;
-const CAROUSEL_HEIGHT_DESKTOP = 260;
+// ... (mismos imports)
+
+const CAROUSEL_HEIGHT_MOBILE = 520;
+const CAROUSEL_HEIGHT_DESKTOP = 500; // Reducido de 650 para que no sea tan invasivo
 
 export function PromoCarousel({
   promociones,
   onPressPromo,
 }: PromoCarouselProps) {
   const [containerWidth, setContainerWidth] = useState(0);
-
   const isWeb = Platform.OS === "web";
-  const isDesktop = isWeb && containerWidth >= 768;
+  const isDesktop = isWeb && containerWidth >= 1024;
 
   const onLayout = (e: LayoutChangeEvent) => {
     const w = e.nativeEvent.layout.width;
@@ -38,66 +40,49 @@ export function PromoCarousel({
     ? CAROUSEL_HEIGHT_DESKTOP
     : CAROUSEL_HEIGHT_MOBILE;
 
-  // itemWidth = ancho de cada slide
-  // En desktop ~58% del contenedor → los adyacentes se asoman ~21% a cada lado
-  const itemWidth = isDesktop
-    ? Math.min(Math.round(containerWidth * 0.58), 760)
-    : Math.round(containerWidth * 0.85);
-
-  // offsetX para centrar: el carrusel arranca desde 0 (izquierda),
-  // necesitamos desplazarlo (containerWidth - itemWidth) / 2 hacia la derecha
-  const offsetX = (containerWidth - itemWidth) / 2;
+  // El ancho del item sigue siendo el 82%, pero ahora lo centraremos
+  const itemWidth = isDesktop ? containerWidth * 0.82 : containerWidth;
 
   return (
-    <View
-      onLayout={onLayout}
-      style={{ marginBottom: 24, width: "100%", overflow: "visible" }}
-    >
+    <View onLayout={onLayout} style={{ width: "100%" }}>
       {containerWidth > 0 && (
         <View
           style={{
-            // Este View tiene el ancho exacto del contenedor medido
             width: containerWidth,
             height: carouselHeight,
-            overflow: "visible",
+            alignItems: "center", // CRÍTICO: Centra el carrusel horizontalmente
+            justifyContent: "center",
           }}
         >
           <Carousel
             loop={promociones.length > 1}
             autoPlay={promociones.length > 1}
-            autoPlayInterval={isDesktop ? 2300 : 2300}
-            scrollAnimationDuration={isDesktop ? 1500 : 1500}
+            autoPlayInterval={4500}
+            scrollAnimationDuration={1000}
             data={promociones}
-            // ✅ width = ancho de CADA item (el store lo necesita)
-            width={itemWidth}
+            width={itemWidth} // El ancho de la "celda" es el del item
             height={carouselHeight}
             style={{
-              // ✅ El contenedor visual = itemWidth (no containerWidth)
-              // Lo centramos manualmente con marginLeft
-              width: itemWidth,
+              width: containerWidth, // El área táctil/visual total
               height: carouselHeight,
-              marginLeft: offsetX, // centra el carrusel dentro del contenedor
-              overflow: "visible",
+              justifyContent: "center",
             }}
-            mode="parallax"
+            mode={isDesktop ? "parallax" : undefined}
             modeConfig={
               isDesktop
                 ? {
                     parallaxScrollingScale: 0.97,
-                    parallaxScrollingOffset: 200,
-                    parallaxAdjacentItemScale: 0.7,
+                    parallaxScrollingOffset: 200, // Ajustado para que no se desplace tanto
+                    parallaxAdjacentItemScale: 0.9,
                   }
-                : {
-                    parallaxScrollingScale: 0.9,
-                    parallaxScrollingOffset: 150,
-                    parallaxAdjacentItemScale: 0.45,
-                  }
+                : undefined
             }
             renderItem={({ item }) => (
               <PromoSlide
                 item={item}
                 onPress={onPressPromo}
                 height={carouselHeight}
+                isDesktop={isDesktop}
               />
             )}
           />
@@ -111,18 +96,24 @@ interface PromoSlideProps {
   item: ProductoCatalogo;
   onPress: (p: ProductoCatalogo) => void;
   height: number;
+  isDesktop: boolean;
 }
 
-function PromoSlide({ item, onPress, height }: PromoSlideProps) {
+function PromoSlide({ item, onPress, height, isDesktop }: PromoSlideProps) {
   const imageUrl =
     item.fotos && item.fotos.length > 0 ? item.fotos[0].urlFoto : null;
 
   return (
     <TouchableOpacity
-      activeOpacity={0.9}
+      activeOpacity={0.95}
       onPress={() => onPress(item)}
-      style={{ height, width: "100%", borderRadius: 16, overflow: "hidden" }}
-      className="bg-card border border-border"
+      // En desktop le damos un poco de redondeo para que el parallax luzca más
+      style={{
+        height,
+        width: "100%",
+        borderRadius: isDesktop ? 32 : 0,
+        overflow: "hidden",
+      }}
     >
       {imageUrl ? (
         <Image
@@ -131,26 +122,28 @@ function PromoSlide({ item, onPress, height }: PromoSlideProps) {
             position: "absolute",
             height: "100%",
             width: "100%",
-            opacity: 0.85,
-            backgroundColor: "#1E1B4B",
+            backgroundColor: "#020617",
           }}
           resizeMode="cover"
         />
       ) : (
         <View
           style={{ position: "absolute", height: "100%", width: "100%" }}
-          className="bg-zinc-200 items-center justify-center"
+          className="bg-zinc-900 items-center justify-center"
         />
       )}
 
-      <View
+      {/* GRADIENTE SUAVE CON EXPO-LINEAR-GRADIENT */}
+      <LinearGradient
+        // Comienza transparente y termina en un negro profundo
+        colors={["transparent", "rgba(0,0,0,0.4)", "rgba(0,0,0,0.95)"]}
+        locations={[0.3, 0.6, 0.9]} // Controla dónde empieza a oscurecerse
         style={{
           position: "absolute",
-          top: 0,
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: "rgba(0,0,0,0.35)",
+          height: "100%", // Cubre todo para un efecto cinematográfico
         }}
       />
 
@@ -160,27 +153,34 @@ function PromoSlide({ item, onPress, height }: PromoSlideProps) {
           bottom: 0,
           left: 0,
           width: "100%",
-          padding: 16,
+          padding: isDesktop ? 48 : 24, // Más espacio en desktop
+          paddingBottom: isDesktop ? 60 : 40,
         }}
       >
         <View
-          style={{ marginBottom: 8, alignSelf: "flex-start" }}
-          className="rounded-sm bg-primary/90 px-2 py-1"
+          style={{ marginBottom: 16, alignSelf: "flex-start" }}
+          className="rounded-full bg-primary/90 px-4 py-2"
         >
           <ThemedText className="text-xs font-bold uppercase tracking-widest text-primary-foreground">
-            Promoción
+            Sugerencia para ti
           </ThemedText>
         </View>
+
         <ThemedText
-          className="mb-1 text-xl font-bold text-white"
-          numberOfLines={1}
+          className={`font-black text-white tracking-tighter ${
+            isDesktop ? "text-6xl mb-4" : "text-4xl mb-2"
+          }`}
+          numberOfLines={2}
         >
           {item.nombre}
         </ThemedText>
+
         {item.descripcion && (
           <ThemedText
-            className="text-sm text-white opacity-90"
-            numberOfLines={2}
+            className={`text-gray-300 font-medium ${
+              isDesktop ? "text-xl max-w-2xl" : "text-lg"
+            }`}
+            numberOfLines={isDesktop ? 3 : 2}
           >
             {item.descripcion}
           </ThemedText>

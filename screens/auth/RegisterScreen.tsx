@@ -20,10 +20,10 @@ export default function RegisterScreen() {
   const [nombre, setNombre] = useState("");
   const [nombreUsuario, setNombreUsuario] = useState("");
   const [correo, setCorreo] = useState("");
+  const [telefono, setTelefono] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -31,7 +31,6 @@ export default function RegisterScreen() {
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const handleRegister = async () => {
-    // (validaciones igual que antes)
     if (
       !nombre.trim() ||
       !nombreUsuario.trim() ||
@@ -42,7 +41,7 @@ export default function RegisterScreen() {
       Toast.show({
         type: "error",
         text1: "Campos requeridos",
-        text2: "Completa todos los campos",
+        text2: "Completa todos los campos obligatorios",
       });
       return;
     }
@@ -83,6 +82,7 @@ export default function RegisterScreen() {
           nombreUsuario: nombreUsuario.trim(),
           correo: correo.trim(),
           password,
+          telefono: telefono.trim() || null,
         },
         "Error al registrarse",
       );
@@ -91,7 +91,7 @@ export default function RegisterScreen() {
       Toast.show({
         type: "success",
         text1: "Registro exitoso",
-        text2: `Bienvenido/a ${response.user.nombres}`,
+        text2: `Bienvenido/a ${response.user.nombre}`,
       });
       router.replace("/(tabs)/catalogo");
     } catch (error: any) {
@@ -108,12 +108,20 @@ export default function RegisterScreen() {
   return (
     <View className="flex-1 bg-background">
       <KeyboardAwareScrollView
-        contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
+        contentContainerStyle={{ flexGrow: 1 }}
         enableOnAndroid={true}
         enableAutomaticScroll={true}
         extraScrollHeight={20}
         keyboardShouldPersistTaps="handled"
       >
+        {/* Flecha de retroceso */}
+        <TouchableOpacity
+          onPress={() => router.back()}
+          className="absolute top-12 left-4 z-10 w-10 h-10 items-center justify-center rounded-full bg-white/80"
+        >
+          <Ionicons name="arrow-back" size={24} color="#1E1B4B" />
+        </TouchableOpacity>
+
         <View className="flex-1 justify-center items-center px-8 pt-20 pb-10">
           <View className="w-full max-w-md">
             <View className="mb-10">
@@ -173,7 +181,26 @@ export default function RegisterScreen() {
               />
             </View>
 
-            {/* Contraseña con ícono de ojo */}
+            {/* Teléfono (nuevo) */}
+            <View className="mb-5">
+              <ThemedText className="text-sm font-medium mb-2">
+                Teléfono{" "}
+                <ThemedText className="text-muted-foreground">
+                  (opcional)
+                </ThemedText>
+              </ThemedText>
+              <TextInput
+                className="w-full h-12 bg-white border border-border rounded-lg px-4 text-foreground"
+                placeholder="7xx xxxxx"
+                placeholderTextColor="#A1A1AA"
+                keyboardType="phone-pad"
+                value={telefono}
+                onChangeText={setTelefono}
+                editable={!loading}
+              />
+            </View>
+
+            {/* Contraseña */}
             <View className="mb-5">
               <ThemedText className="text-sm font-medium mb-2">
                 Contraseña
@@ -207,7 +234,7 @@ export default function RegisterScreen() {
               )}
             </View>
 
-            {/* Confirmar contraseña con ícono de ojo */}
+            {/* Confirmar contraseña */}
             <View className="mb-8">
               <ThemedText className="text-sm font-medium mb-2">
                 Confirmar contraseña
@@ -246,11 +273,12 @@ export default function RegisterScreen() {
 
             {/* Botón */}
             <TouchableOpacity
-              className={`btn-tap-active h-12 bg-primary rounded-lg items-center justify-center ${
+              className={`h-12 bg-primary rounded-lg items-center justify-center ${
                 loading ? "opacity-70" : ""
               }`}
               onPress={handleRegister}
               disabled={loading}
+              activeOpacity={0.8}
             >
               {loading ? (
                 <ActivityIndicator color="#FFFFFF" />

@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
 import { CustomTabBar } from "../../components/CustomTabBar";
-import { Sidebar } from "../../components/Sidebar";
+import { Navbar } from "../../components/Navbar";
 import { useAuth } from "../../contexts/AuthContext";
 import { useResponsive } from "../../hooks/useResponsive";
 
@@ -22,15 +22,19 @@ export default function TabsLayout() {
   // ===== ESCRITORIO: sidebar + contenido =====
   if (isDesktop) {
     return (
-      <View className="flex-1 flex-row bg-background">
-        <Sidebar isAdmin={isAdmin} />
-        <Tabs tabBar={() => null} screenOptions={{ headerShown: false }}>
-          <Tabs.Screen name="catalogo" options={{ title: "Catálogo" }} />
-          <Tabs.Screen name="carrito" options={{ title: "Carrito" }} />
-          <Tabs.Screen name="perfil" options={{ title: "Perfil" }} />
-          <Tabs.Screen name="productos" options={{ title: "Productos" }} />
-          <Tabs.Screen name="administracion" options={{ title: "Dueño" }} />
-        </Tabs>
+      <View className="flex-1 flex-column bg-background">
+        {/* Ahora es un Navbar horizontal arriba */}
+        <Navbar isAdmin={isAdmin} />
+
+        <View className="flex-1">
+          <Tabs tabBar={() => null} screenOptions={{ headerShown: false }}>
+            <Tabs.Screen name="catalogo" />
+            <Tabs.Screen name="carrito" />
+            <Tabs.Screen name="perfil" />
+            <Tabs.Screen name="productos" />
+            <Tabs.Screen name="administracion" />
+          </Tabs>
+        </View>
       </View>
     );
   }
