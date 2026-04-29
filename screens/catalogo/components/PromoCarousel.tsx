@@ -65,8 +65,8 @@ export function PromoCarousel({
           <Carousel
             loop={promociones.length > 1}
             autoPlay={promociones.length > 1}
-            autoPlayInterval={isDesktop ? 4000 : 3500}
-            scrollAnimationDuration={isDesktop ? 650 : 500}
+            autoPlayInterval={isDesktop ? 2300 : 2300}
+            scrollAnimationDuration={isDesktop ? 1500 : 1500}
             data={promociones}
             // ✅ width = ancho de CADA item (el store lo necesita)
             width={itemWidth}

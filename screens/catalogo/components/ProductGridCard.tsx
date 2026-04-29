@@ -8,18 +8,13 @@ import { ProductoCatalogo } from "../types/catalogo.types";
 interface ProductGridCardProps {
   producto: ProductoCatalogo;
   onPress: () => void;
-  anchoColumna: number;
 }
 
-export function ProductGridCard({
-  producto,
-  onPress,
-  anchoColumna,
-}: ProductGridCardProps) {
+export function ProductGridCard({ producto, onPress }: ProductGridCardProps) {
   const addToCart = useCartStore((state) => state.addToCart);
 
   const handleAddToCart = () => {
-    addToCart(producto as any); // Se asume que el store se adaptará a la interfaz Producto actual
+    addToCart(producto as any);
   };
 
   const imageUrl =
@@ -31,14 +26,14 @@ export function ProductGridCard({
     <TouchableOpacity
       activeOpacity={0.9}
       onPress={onPress}
-      style={{ width: anchoColumna }}
-      className="p-2"
+      className="w-full p-2"
     >
       <View className="bg-card rounded-xl overflow-hidden border border-border">
         {imageUrl ? (
           <Image
             source={{ uri: imageUrl }}
-            className="w-full h-36 bg-zinc-100 object-cover"
+            className="w-full h-36 bg-zinc-100"
+            resizeMode="cover"
           />
         ) : (
           <View className="w-full h-36 bg-zinc-200 items-center justify-center">

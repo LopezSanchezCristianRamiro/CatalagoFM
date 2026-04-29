@@ -24,24 +24,34 @@ export default function ProductosScreen() {
   const { width } = useWindowDimensions();
 
   const isMobile = width < 700;
-const [categoriaBloqueada, setCategoriaBloqueada] = useState<Categoria | null>(null);
-const [productosCategoriaBloqueada, setProductosCategoriaBloqueada] = useState<Producto[]>([]);
+  const [categoriaBloqueada, setCategoriaBloqueada] =
+    useState<Categoria | null>(null);
+  const [productosCategoriaBloqueada, setProductosCategoriaBloqueada] =
+    useState<Producto[]>([]);
   const [tab, setTab] = useState<"productos" | "categorias">("productos");
   const [busqueda, setBusqueda] = useState("");
 
   const [modalProducto, setModalProducto] = useState(false);
- const [productoImagenes, setProductoImagenes] = useState<Producto | null>(null);
-const [productoEditando, setProductoEditando] = useState<Producto | null>(null);
-  const [categoriaEditando, setCategoriaEditando] = useState<Categoria | null>(
-    null
+  const [productoImagenes, setProductoImagenes] = useState<Producto | null>(
+    null,
   );
-const [categoriaAnimandoBoton, setCategoriaAnimandoBoton] = useState<number | null>(null);
+  const [productoEditando, setProductoEditando] = useState<Producto | null>(
+    null,
+  );
+  const [categoriaEditando, setCategoriaEditando] = useState<Categoria | null>(
+    null,
+  );
+  const [categoriaAnimandoBoton, setCategoriaAnimandoBoton] = useState<
+    number | null
+  >(null);
   const [productoEliminar, setProductoEliminar] = useState<number | null>(null);
   const [productoAnimandoEliminar, setProductoAnimandoEliminar] = useState<
     number | null
   >(null);
 
-  const [categoriaEliminar, setCategoriaEliminar] = useState<number | null>(null);
+  const [categoriaEliminar, setCategoriaEliminar] = useState<number | null>(
+    null,
+  );
   const [categoriaAnimandoEliminar, setCategoriaAnimandoEliminar] = useState<
     number | null
   >(null);
@@ -51,11 +61,11 @@ const [categoriaAnimandoBoton, setCategoriaAnimandoBoton] = useState<number | nu
   const productosFiltrados = productos.filter((p) =>
     `${p.nombre} ${p.descripcion ?? ""} ${p.categoria?.nombre ?? ""}`
       .toLowerCase()
-      .includes(busqueda.toLowerCase())
+      .includes(busqueda.toLowerCase()),
   );
 
   const categoriasFiltradas = categorias.filter((cat) =>
-    cat.nombre.toLowerCase().includes(busqueda.toLowerCase())
+    cat.nombre.toLowerCase().includes(busqueda.toLowerCase()),
   );
 
   const abrirNuevoProducto = () => {
@@ -118,21 +128,21 @@ const [categoriaAnimandoBoton, setCategoriaAnimandoBoton] = useState<number | nu
     }
   };
 
- const confirmarEliminarCategoria = (id: number) => {
-  const categoria = categorias.find((cat) => cat.idCategoria === id);
+  const confirmarEliminarCategoria = (id: number) => {
+    const categoria = categorias.find((cat) => cat.idCategoria === id);
 
-  const productosAsociados = productos.filter(
-    (producto) => producto.idCategoria === id
-  );
+    const productosAsociados = productos.filter(
+      (producto) => producto.idCategoria === id,
+    );
 
-  if (productosAsociados.length > 0) {
-    setCategoriaBloqueada(categoria ?? null);
-    setProductosCategoriaBloqueada(productosAsociados);
-    return;
-  }
+    if (productosAsociados.length > 0) {
+      setCategoriaBloqueada(categoria ?? null);
+      setProductosCategoriaBloqueada(productosAsociados);
+      return;
+    }
 
-  setCategoriaEliminar(id);
-};
+    setCategoriaEliminar(id);
+  };
 
   const eliminarCategoria = async () => {
     if (!categoriaEliminar) return;
@@ -168,26 +178,25 @@ const [categoriaAnimandoBoton, setCategoriaAnimandoBoton] = useState<number | nu
   return (
     <View className="flex-1 bg-white border-b border-slate-200">
       <View className="pt-12 px-4 pb-3 bg-white border-b border-slate-200 z-20">
-  <SearchBar
-    value={busqueda}
-    onChangeText={setBusqueda}
-    placeholder="Buscar aplicaciones o categorías..."
-  />
-</View>
+        <SearchBar
+          value={busqueda}
+          onChangeText={setBusqueda}
+          placeholder="Buscar aplicaciones o categorías..."
+        />
+      </View>
 
-<ScrollView
-  className="flex-1"
-  contentContainerStyle={{
-    paddingHorizontal: 16,
-    paddingBottom: 120,
-  }}
->
-       <View
-  className={`w-full self-center py-6 ${
-    isMobile ? "" : "max-w-[900px]"
-  }`}
-> 
-
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{
+          paddingHorizontal: 16,
+          paddingBottom: 120,
+        }}
+      >
+        <View
+          className={`w-full self-center py-6 ${
+            isMobile ? "" : "max-w-[900px]"
+          }`}
+        >
           <View className="flex-row border-b border-purple-200 mb-6">
             <Pressable
               onPress={() => setTab("productos")}
@@ -236,24 +245,24 @@ const [categoriaAnimandoBoton, setCategoriaAnimandoBoton] = useState<number | nu
                 <ActivityIndicator size="large" />
               ) : (
                 <FlatList
-  data={productosFiltrados}
-  keyExtractor={(item) => String(item.idProducto)}
-  scrollEnabled={false}
-  ItemSeparatorComponent={() => <View className="h-4" />}
-  initialNumToRender={6}
-  maxToRenderPerBatch={6}
-  windowSize={5}
-  removeClippedSubviews
-  renderItem={({ item }) => (
-  <ProductoCard
-  producto={item}
-  onEdit={editarProducto}
-  onDelete={confirmarEliminarProducto}
-  onViewImages={setProductoImagenes}
-  deleting={productoAnimandoEliminar === item.idProducto}
-/>
-  )}
-/>
+                  data={productosFiltrados}
+                  keyExtractor={(item) => String(item.idProducto)}
+                  scrollEnabled={false}
+                  ItemSeparatorComponent={() => <View className="h-4" />}
+                  initialNumToRender={6}
+                  maxToRenderPerBatch={6}
+                  windowSize={5}
+                  removeClippedSubviews
+                  renderItem={({ item }) => (
+                    <ProductoCard
+                      producto={item}
+                      onEdit={editarProducto}
+                      onDelete={confirmarEliminarProducto}
+                      onViewImages={setProductoImagenes}
+                      deleting={productoAnimandoEliminar === item.idProducto}
+                    />
+                  )}
+                />
               )}
             </>
           )}
@@ -320,18 +329,18 @@ const [categoriaAnimandoBoton, setCategoriaAnimandoBoton] = useState<number | nu
                         />
                       </Pressable>
 
-                    <Pressable
-  onPress={() =>
-    confirmarEliminarCategoria(cat.idCategoria)
-  }
-  className="w-9 h-9 rounded-full bg-red-50 items-center justify-center"
->
-  <Ionicons
-    name="trash-outline"
-    size={18}
-    color="#ef4444"
-  />
-</Pressable>
+                      <Pressable
+                        onPress={() =>
+                          confirmarEliminarCategoria(cat.idCategoria)
+                        }
+                        className="w-9 h-9 rounded-full bg-red-50 items-center justify-center"
+                      >
+                        <Ionicons
+                          name="trash-outline"
+                          size={18}
+                          color="#ef4444"
+                        />
+                      </Pressable>
                     </View>
                   </View>
                 ))
@@ -342,36 +351,40 @@ const [categoriaAnimandoBoton, setCategoriaAnimandoBoton] = useState<number | nu
       </ScrollView>
 
       <View className="absolute right-4 bottom-8 items-center gap-2">
-  <Pressable
-    onPress={async () => {
-      await refetch();
+        <Pressable
+          onPress={async () => {
+            await refetch();
 
-      Toast.show({
-        type: "success",
-        text1: "Vista actualizada",
-      });
-    }}
-    className="bg-slate-950 w-12 h-12 rounded-full items-center justify-center shadow-lg"
-  >
-    <Ionicons name="refresh-outline" size={20} color="white" />
-  </Pressable>
+            Toast.show({
+              type: "success",
+              text1: "Vista actualizada",
+            });
+          }}
+          className="bg-slate-950 w-12 h-12 rounded-full items-center justify-center shadow-lg"
+        >
+          <Ionicons name="refresh-outline" size={20} color="white" />
+        </Pressable>
 
-  <Pressable
-    onPress={() => {
-      if (tab === "productos") {
-        abrirNuevoProducto();
-      } else {
-        abrirNuevaCategoria();
-      }
-    }}
-    className="bg-purple-700 w-13 h-13 rounded-full items-center justify-center shadow-lg"
-    style={{ width: 52, height: 52 }}
-  >
-    <Ionicons name="add" size={26} color="white" />
-  </Pressable>
-</View>
+        <Pressable
+          onPress={() => {
+            if (tab === "productos") {
+              abrirNuevoProducto();
+            } else {
+              abrirNuevaCategoria();
+            }
+          }}
+          className="bg-purple-700 w-13 h-13 rounded-full items-center justify-center shadow-lg"
+          style={{ width: 52, height: 52 }}
+        >
+          <Ionicons name="add" size={26} color="white" />
+        </Pressable>
+      </View>
 
-      <Modal visible={productoEliminar !== null} transparent animationType="fade">
+      <Modal
+        visible={productoEliminar !== null}
+        transparent
+        animationType="fade"
+      >
         <View className="flex-1 bg-black/40 items-center justify-center px-6">
           <View className="bg-white w-full max-w-[420px] rounded-3xl p-6">
             <View className="items-center mb-4">
@@ -520,74 +533,78 @@ const [categoriaAnimandoBoton, setCategoriaAnimandoBoton] = useState<number | nu
           </View>
         </View>
       </Modal>
-<Modal
-  visible={categoriaBloqueada !== null}
-  transparent
-  animationType="fade"
->
-  <View className="flex-1 bg-black/40 items-center justify-center px-6">
-    <View className="bg-white w-full max-w-[460px] rounded-3xl p-6">
-      <View className="items-center mb-4">
-        <View className="w-16 h-16 rounded-full bg-red-50 items-center justify-center">
-          <Ionicons name="alert-circle-outline" size={34} color="#dc2626" />
-        </View>
-      </View>
-
-      <ThemedText className="text-slate-950 text-xl font-bold text-center">
-        No se puede eliminar
-      </ThemedText>
-
-      <ThemedText className="text-slate-500 text-center mt-2">
-        La categoría "{categoriaBloqueada?.nombre}" tiene productos registrados.
-        Primero cambia o elimina esos productos.
-      </ThemedText>
-
-      <View className="bg-slate-50 rounded-2xl mt-5 p-4 max-h-[260px]">
-        <ThemedText className="text-slate-900 font-bold mb-3">
-          Productos asociados
-        </ThemedText>
-
-        <ScrollView>
-          {productosCategoriaBloqueada.map((producto) => (
-            <View
-              key={producto.idProducto}
-              className="flex-row items-center justify-between py-3 border-b border-slate-200"
-            >
-              <View className="flex-1 pr-3">
-                <ThemedText className="text-slate-950 font-semibold">
-                  {producto.nombre}
-                </ThemedText>
-
-                <ThemedText className="text-slate-500 text-xs">
-                  Bs. {producto.precio}
-                </ThemedText>
-              </View>
-
-              <Ionicons name="cube" size={20} color="#64748b" />
-            </View>
-          ))}
-        </ScrollView>
-      </View>
-
-      <Pressable
-        onPress={() => {
-          setCategoriaBloqueada(null);
-          setProductosCategoriaBloqueada([]);
-        }}
-        className="bg-slate-950 rounded-2xl py-4 mt-6"
+      <Modal
+        visible={categoriaBloqueada !== null}
+        transparent
+        animationType="fade"
       >
-        <ThemedText className="text-white text-center font-bold">
-          Entendido
-        </ThemedText>
-      </Pressable>
-    </View>
-  </View>
-</Modal>
-<ProductoImagenesModal
-  visible={productoImagenes !== null}
-  producto={productoImagenes}
-  onClose={() => setProductoImagenes(null)}
-/>
+        <View className="flex-1 bg-black/40 items-center justify-center px-6">
+          <View className="bg-white w-full max-w-[460px] rounded-3xl p-6">
+            <View className="items-center mb-4">
+              <View className="w-16 h-16 rounded-full bg-red-50 items-center justify-center">
+                <Ionicons
+                  name="alert-circle-outline"
+                  size={34}
+                  color="#dc2626"
+                />
+              </View>
+            </View>
+
+            <ThemedText className="text-slate-950 text-xl font-bold text-center">
+              No se puede eliminar
+            </ThemedText>
+
+            <ThemedText className="text-slate-500 text-center mt-2">
+              La categoría `{categoriaBloqueada?.nombre}` tiene productos
+              registrados. Primero cambia o elimina esos productos.
+            </ThemedText>
+
+            <View className="bg-slate-50 rounded-2xl mt-5 p-4 max-h-[260px]">
+              <ThemedText className="text-slate-900 font-bold mb-3">
+                Productos asociados
+              </ThemedText>
+
+              <ScrollView>
+                {productosCategoriaBloqueada.map((producto) => (
+                  <View
+                    key={producto.idProducto}
+                    className="flex-row items-center justify-between py-3 border-b border-slate-200"
+                  >
+                    <View className="flex-1 pr-3">
+                      <ThemedText className="text-slate-950 font-semibold">
+                        {producto.nombre}
+                      </ThemedText>
+
+                      <ThemedText className="text-slate-500 text-xs">
+                        Bs. {producto.precio}
+                      </ThemedText>
+                    </View>
+
+                    <Ionicons name="cube" size={20} color="#64748b" />
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+
+            <Pressable
+              onPress={() => {
+                setCategoriaBloqueada(null);
+                setProductosCategoriaBloqueada([]);
+              }}
+              className="bg-slate-950 rounded-2xl py-4 mt-6"
+            >
+              <ThemedText className="text-white text-center font-bold">
+                Entendido
+              </ThemedText>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+      <ProductoImagenesModal
+        visible={productoImagenes !== null}
+        producto={productoImagenes}
+        onClose={() => setProductoImagenes(null)}
+      />
       <ProductoModal
         visible={modalProducto}
         categorias={categorias}
