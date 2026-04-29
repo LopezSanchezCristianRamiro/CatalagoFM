@@ -172,7 +172,7 @@ useImperativeHandle(ref, () => ({
   return (
     <View className="p-6">
       <ThemedText className="text-slate-900 text-2xl font-bold mb-6">
-        {productoEditando ? "Editar Producto" : "Registrar Nuevo Producto"}
+        {productoEditando ? "Editar campos del Producto" : "Registrar Nuevo Producto"}
       </ThemedText>
 
       <View className="flex-row flex-wrap gap-8">
