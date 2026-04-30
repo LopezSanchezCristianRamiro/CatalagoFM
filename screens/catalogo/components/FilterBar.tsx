@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import {
   Platform,
@@ -9,90 +10,91 @@ import {
   View,
 } from "react-native";
 import { ThemedText } from "../../../components/ThemedText";
-import { CategoriaCatalogo } from "../types/catalogo.types";
 
-interface FilterBarProps {
-  searchQuery: string;
-  setSearchQuery: (text: string) => void;
-  categorias: CategoriaCatalogo[];
-  categoriaActiva: number | null;
-  setCategoriaActiva: (id: number | null) => void;
-}
-
-export function FilterBar({
-  searchQuery,
-  setSearchQuery,
-  categorias,
-  categoriaActiva,
-  setCategoriaActiva,
-}: FilterBarProps) {
+export function FilterBar({ searchQuery, setSearchQuery, categorias, categoriaActiva, setCategoriaActiva }: any) {
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === "web" && width >= 1024;
 
   return (
-    <View className="px-4 mb-4">
-      {/* Buscador - Un poco más ancho en desktop si quieres */}
+    <View className="px-6 mb-10">
+      
+      {/* 1. BUSCADOR: Estilo "Cápsula" Moderno */}
       <View
-        className={`flex-row items-center bg-card border border-border rounded-xl px-4 shadow-sm mb-6 ${isDesktop ? "h-14 max-w-2xl" : "h-12"}`}
+        className={`flex-row items-center rounded-full px-6 mb-8 mx-auto ${
+          isDesktop ? "h-14 w-1/2" : "h-12 w-full"
+        }`}
+        style={{
+          backgroundColor: 'rgba(0, 0, 0, 0.05)', // Fondo gris muy suave
+          // Quitamos el border negro feo
+        }}
       >
-        <Ionicons name="search" size={isDesktop ? 24 : 20} color="#6B7280" />
+        <Ionicons name="search" size={18} color="#A855F7" />
         <TextInput
-          className={`flex-1 ml-3 text-foreground font-sans ${isDesktop ? "text-lg" : "text-base"}`}
-          placeholder="Buscar por plataforma o categoría..."
-          placeholderTextColor="#6B7280"
+          className="flex-1 ml-3 text-base font-medium"
+          placeholder="¿Qué servicio buscas?"
+          placeholderTextColor="#94a3b8"
           value={searchQuery}
           onChangeText={setSearchQuery}
+          style={{ outlineStyle: 'none' } as any} // Quita el borde azul en Web
         />
       </View>
 
-      {/* Filtros de Categoría */}
+      {/* 2. CATEGORÍAS: Minimalismo con Aire */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: isDesktop ? 16 : 8, paddingBottom: 4 }}
+        contentContainerStyle={{ 
+          alignItems: 'center', 
+          justifyContent: isDesktop ? 'center' : 'flex-start',
+          width: isDesktop ? '100%' : 'auto' 
+        }}
       >
-        <TouchableOpacity
-          onPress={() => setCategoriaActiva(null)}
-          className={`rounded-full border items-center justify-center ${
-            isDesktop ? "px-8 py-3" : "px-5 py-2"
-          } ${
-            categoriaActiva === null
-              ? "bg-foreground border-foreground"
-              : "bg-card border-border"
-          }`}
-        >
-          <ThemedText
-            className={`font-bold ${isDesktop ? "text-lg" : "text-sm"} ${
-              categoriaActiva === null ? "text-white" : "text-foreground"
-            }`}
+        <View className="flex-row items-center">
+          {/* BOTÓN TODOS */}
+          <TouchableOpacity 
+            onPress={() => setCategoriaActiva(null)} 
+            className="mr-8 items-center"
           >
-            Todos
-          </ThemedText>
-        </TouchableOpacity>
-
-        {categorias.map((cat) => (
-          <TouchableOpacity
-            key={cat.idCategoria}
-            onPress={() => setCategoriaActiva(cat.idCategoria)}
-            className={`rounded-full border items-center justify-center ${
-              isDesktop ? "px-8 py-3" : "px-5 py-2"
-            } ${
-              categoriaActiva === cat.idCategoria
-                ? "bg-primary border-primary"
-                : "bg-card border-border"
-            }`}
-          >
-            <ThemedText
-              className={`font-bold ${isDesktop ? "text-lg" : "text-sm"} ${
-                categoriaActiva === cat.idCategoria
-                  ? "text-white"
-                  : "text-muted-foreground"
+            <ThemedText 
+              className={`text-[11px] font-black uppercase tracking-[2px] ${
+                categoriaActiva === null ? "text-black" : "text-zinc-400"
               }`}
             >
-              {cat.nombre}
+              Todos
             </ThemedText>
+            {categoriaActiva === null && (
+              <LinearGradient
+                colors={["#8B5CF6", "#D946EF"]}
+                start={{x:0, y:0}} end={{x:1, y:0}}
+                className="h-[3px] w-full mt-1 rounded-full"
+              />
+            )}
           </TouchableOpacity>
-        ))}
+
+          {/* MAPEO DE CATEGORÍAS */}
+          {categorias.map((cat: any) => (
+            <TouchableOpacity 
+              key={cat.idCategoria} 
+              onPress={() => setCategoriaActiva(cat.idCategoria)}
+              className="mr-8 items-center"
+            >
+              <ThemedText 
+                className={`text-[11px] font-black uppercase tracking-[2px] ${
+                  categoriaActiva === cat.idCategoria ? "text-black" : "text-zinc-400"
+                }`}
+              >
+                {cat.nombre}
+              </ThemedText>
+              {categoriaActiva === cat.idCategoria && (
+                <LinearGradient
+                  colors={["#8B5CF6", "#D946EF"]}
+                  start={{x:0, y:0}} end={{x:1, y:0}}
+                  className="h-[3px] w-full mt-1 rounded-full"
+                />
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
       </ScrollView>
     </View>
   );

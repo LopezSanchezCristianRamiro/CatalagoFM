@@ -3,6 +3,7 @@ import { Image } from "expo-image";
 import { usePathname, useRouter } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
 import { useAuth } from "../contexts/AuthContext";
+import { useCartAnimation } from "../screens/catalogo/components/CartAnimationContext";
 import { useCartStore } from "../store/cartStore";
 import { ThemedText } from "./ThemedText";
 
@@ -40,7 +41,7 @@ export function Navbar({ isAdmin }: NavbarProps) {
   const cartTotal = useCartStore((s) =>
     s.items.reduce((acc, i) => acc + i.cantidad, 0),
   );
-
+  const { cartRef } = useCartAnimation(); 
   const activeColor = "#7C3AED";
   const inactiveColor = "#6B7280";
 
@@ -99,7 +100,8 @@ export function Navbar({ isAdmin }: NavbarProps) {
           onPress={() => router.push("/(tabs)/carrito")}
           className={`p-2 rounded-full ${pathname?.includes("carrito") ? "bg-primary/10" : ""}`}
         >
-          <View style={{ position: "relative" }}>
+          {/* ← Envuelve el View existente con ref */}
+          <View ref={cartRef} collapsable={false} style={{ position: "relative" }}>
             <Ionicons
               name="cart-outline"
               size={24}
