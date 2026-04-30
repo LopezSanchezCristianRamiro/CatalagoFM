@@ -232,7 +232,7 @@ export default function PerfilScreen() {
   const renderHeader = () => (
     <View className="mb-6">
       {/* Avatar */}
-      <View className="w-24 h-24 bg-muted rounded-full items-center justify-center self-center mb-6 mt-6">
+      <View className="w-24 h-24 bg-muted rounded-full items-center justify-center self-center mb-6 mt-20">
         <ThemedText className="text-3xl font-bold text-muted-foreground">
           {user.nombres?.charAt(0)?.toUpperCase() ?? "U"}
         </ThemedText>

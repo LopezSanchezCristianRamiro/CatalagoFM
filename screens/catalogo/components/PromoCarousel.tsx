@@ -19,7 +19,7 @@ interface PromoCarouselProps {
 // ... (mismos imports)
 
 const CAROUSEL_HEIGHT_MOBILE = 520;
-const CAROUSEL_HEIGHT_DESKTOP = 500; // Reducido de 650 para que no sea tan invasivo
+const CAROUSEL_HEIGHT_DESKTOP = 530; // Reducido de 650 para que no sea tan invasivo
 
 export function PromoCarousel({
   promociones,
@@ -162,7 +162,7 @@ function PromoSlide({ item, onPress, height, isDesktop }: PromoSlideProps) {
           className="rounded-full bg-primary/90 px-4 py-2"
         >
           <ThemedText className="text-xs font-bold uppercase tracking-widest text-primary-foreground">
-            Sugerencia para ti
+            Oferta
           </ThemedText>
         </View>
 

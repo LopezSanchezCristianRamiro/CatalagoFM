@@ -1,17 +1,15 @@
 /* eslint-disable react/display-name */
-// app/(catalogo)/CatalogoDetailScreen.tsx
-
+// screens/catalogo/CatalogoDetailScreen.tsx
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useRef, useState } from "react";
 import {
-  ActivityIndicator,
+  Pressable,
   ScrollView,
-  TouchableOpacity,
   View,
-  useWindowDimensions,
+  useWindowDimensions
 } from "react-native";
 import Animated, {
   FadeIn,
@@ -22,21 +20,22 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import Carousel, { ICarouselInstance } from "react-native-reanimated-carousel";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import { ThemedText } from "../../components/ThemedText";
 import { useCartStore } from "../../store/cartStore";
+import { Shimmer } from "./components/Shimmer";
 import { useCatalogoDetail } from "./hooks/useCatalogoDetail";
 import { FotoCatalogo } from "./types/catalogo.types";
 
 // ─── Constantes ──────────────────────────────────────────────────────────────
-const MAX_CONTENT_WIDTH = 768; // Ancho máximo para pantallas grandes (desktop/tablets)
+const MAX_CONTENT_WIDTH = 768;
 
-// ─── CarouselDot ─────────────────────────────────────────────────────────────
+// ─── Dot del carrusel ────────────────────────────────────────────────────────
 interface CarouselDotProps {
   index: number;
   activeIndex: number;
 }
-
 const CarouselDot = React.memo(({ index, activeIndex }: CarouselDotProps) => {
   const isActive = index === activeIndex;
   const animStyle = useAnimatedStyle(() => ({
@@ -47,13 +46,13 @@ const CarouselDot = React.memo(({ index, activeIndex }: CarouselDotProps) => {
     <Animated.View
       style={[
         animStyle,
-        { height: 6, borderRadius: 9999, backgroundColor: "#000" }, // Cambiado a negro/oscuro para visibilidad sin el gradiente falso
+        { height: 6, borderRadius: 9999, backgroundColor: "#FFFFFF" },
       ]}
     />
   );
 });
 
-// ─── CarouselItem ─────────────────────────────────────────────────────────────
+// ─── Carousel item ─────────────────────────────────────────────────────────
 const CarouselItem = React.memo(
   ({
     item,
@@ -76,7 +75,7 @@ const CarouselItem = React.memo(
       <Image
         source={{ uri: item.urlFoto ?? undefined }}
         style={{ width: "100%", height: "100%" }}
-        contentFit="contain" // CRÍTICO: 'contain' evita que logos/imágenes se corten en web
+        contentFit="contain"
         transition={180}
         placeholder="LGF5?xYk^6#M@-5c,1J5@[or[Q6."
       />
@@ -84,80 +83,58 @@ const CarouselItem = React.memo(
   ),
 );
 
-// ─── BackButton ───────────────────────────────────────────────────────────────
-function BackButton({ onPress }: { onPress: () => void }) {
+// ─── Botón volver ─────────────────────────────────────────────────────────
+function BackButton({
+  onPress,
+  topInset,
+}: {
+  onPress: () => void;
+  topInset: number;
+}) {
   return (
-    <TouchableOpacity
+    <Pressable
       onPress={onPress}
-      activeOpacity={0.8}
       style={{
         position: "absolute",
-        top: 14,
-        left: 14,
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        backgroundColor: "rgba(255,255,255,0.9)",
+        top: topInset + 12,
+        left: 16,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: "rgba(255,255,255,0.85)",
         alignItems: "center",
         justifyContent: "center",
-        borderWidth: 0.5,
-        borderColor: "rgba(0,0,0,0.08)",
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.12,
+        shadowOpacity: 0.15,
         shadowRadius: 4,
-        elevation: 3,
-        zIndex: 10,
+        elevation: 4,
       }}
       accessibilityLabel="Volver"
-      accessibilityRole="button"
     >
-      <Ionicons name="chevron-back" size={20} color="#1E1B4B" />
-    </TouchableOpacity>
+      <Ionicons name="chevron-back" size={22} color="#1E1B4B" />
+    </Pressable>
   );
 }
 
-// ─── DiscountBadge ────────────────────────────────────────────────────────────
-function DiscountBadge({
-  original,
-  discounted,
-}: {
-  original: number;
-  discounted: number;
-}) {
-  const pct = Math.round(((original - discounted) / original) * 100);
-  return (
-    <View
-      style={{
-        backgroundColor: "#F5F3FF",
-        borderRadius: 9999,
-        paddingHorizontal: 8,
-        paddingVertical: 2,
-        alignSelf: "center",
-        marginLeft: 8,
-      }}
-    >
-      <ThemedText style={{ fontSize: 12, fontWeight: "700", color: "#4C1D95" }}>
-        –{pct}%
-      </ThemedText>
-    </View>
-  );
-}
-
-// ─── ImageGallery ─────────────────────────────────────────────────────────────
+// ─── Galería de imágenes ─────────────────────────────────────────────────
 interface ImageGalleryProps {
   fotos: FotoCatalogo[];
   onBack: () => void;
   containerWidth: number;
+  topInset: number;
 }
 
-function ImageGallery({ fotos, onBack, containerWidth }: ImageGalleryProps) {
+function ImageGallery({
+  fotos,
+  onBack,
+  containerWidth,
+  topInset,
+}: ImageGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const carouselRef = useRef<ICarouselInstance>(null);
   const hasMultiple = fotos.length > 1;
-
-  // Calculamos una altura razonable (máximo 450px para no ocupar toda la pantalla en desktop)
-  const carouselHeight = Math.min(containerWidth * 0.72, 450);
+  const carouselHeight = Math.min(containerWidth * 0.75, 500);
 
   if (fotos.length === 0) {
     return (
@@ -171,10 +148,10 @@ function ImageGallery({ fotos, onBack, containerWidth }: ImageGalleryProps) {
         }}
       >
         <Ionicons name="image-outline" size={56} color="#C4B5FD" />
-        <ThemedText style={{ fontSize: 12, color: "#9CA3AF", marginTop: 8 }}>
+        <ThemedText className="text-muted-foreground text-sm mt-2">
           Sin imágenes
         </ThemedText>
-        <BackButton onPress={onBack} />
+        <BackButton onPress={onBack} topInset={topInset} />
       </View>
     );
   }
@@ -194,9 +171,9 @@ function ImageGallery({ fotos, onBack, containerWidth }: ImageGalleryProps) {
         width={containerWidth}
         height={carouselHeight}
         autoPlay={hasMultiple}
-        autoPlayInterval={1500}
+        autoPlayInterval={1800}
+        scrollAnimationDuration={400}
         data={fotos}
-        scrollAnimationDuration={500}
         onSnapToItem={setActiveIndex}
         renderItem={({ item }) => (
           <CarouselItem
@@ -206,45 +183,36 @@ function ImageGallery({ fotos, onBack, containerWidth }: ImageGalleryProps) {
           />
         )}
       />
-
-      <BackButton onPress={onBack} />
-
+      <BackButton onPress={onBack} topInset={topInset} />
       {hasMultiple && (
         <View
           style={{
             position: "absolute",
-            top: 14,
-            right: 14,
-            backgroundColor: "rgba(0,0,0,0.4)",
+            top: topInset + 12,
+            right: 16,
+            backgroundColor: "rgba(0,0,0,0.5)",
             borderRadius: 9999,
-            paddingHorizontal: 10,
+            paddingHorizontal: 12,
             paddingVertical: 4,
           }}
         >
           <ThemedText
-            style={{ color: "#FFFFFF", fontSize: 11, fontWeight: "600" }}
+            style={{ color: "#FFFFFF", fontSize: 12, fontWeight: "600" }}
           >
             {activeIndex + 1} / {fotos.length}
           </ThemedText>
         </View>
       )}
-
       {hasMultiple && (
         <View
           style={{
             position: "absolute",
-            bottom: 12,
+            bottom: 14,
             left: 0,
             right: 0,
             flexDirection: "row",
             justifyContent: "center",
-            alignItems: "center",
-            gap: 5,
-            paddingVertical: 4,
-            backgroundColor: "rgba(255,255,255,0.4)", // Fondo sutil para que los dots se vean sobre cualquier imagen
-            alignSelf: "center",
-            borderRadius: 20,
-            paddingHorizontal: 10,
+            gap: 6,
           }}
         >
           {fotos.map((_, i) => (
@@ -256,15 +224,15 @@ function ImageGallery({ fotos, onBack, containerWidth }: ImageGalleryProps) {
   );
 }
 
-// ─── Pantalla principal ───────────────────────────────────────────────────────
+// ─── Pantalla principal ─────────────────────────────────────────────────
 export default function CatalogoDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const idProducto = Number(id);
-
-  // CRÍTICO: useWindowDimensions reacciona a cambios de tamaño de ventana en Web
   const { width } = useWindowDimensions();
   const containerWidth = Math.min(width, MAX_CONTENT_WIDTH);
+  const insets = useSafeAreaInsets();
+  const topInset = insets.top;
 
   const { producto, loading, error } = useCatalogoDetail(idProducto);
   const addToCart = useCartStore((state) => state.addToCart);
@@ -277,48 +245,132 @@ export default function CatalogoDetailScreen() {
   const handleAddToCart = useCallback(() => {
     if (!producto) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    cartBtnScale.value = withSpring(0.96, { damping: 10 }, () => {
+    cartBtnScale.value = withSpring(0.94, { damping: 12 }, () => {
       cartBtnScale.value = withSpring(1);
     });
     addToCart(producto as any);
     Toast.show({
       type: "success",
-      text1: "Revisa tu carrito",
-      text2: `${producto.nombre} ha sido agregado al carrito.`,
+      text1: "Añadido al carrito",
+      text2: `${producto.nombre} agregado correctamente.`,
+      visibilityTime: 2500,
     });
     router.back();
-  }, [producto, addToCart, cartBtnScale]);
+  }, [producto, addToCart, cartBtnScale, router]);
 
-  // ── Loading ──────────────────────────────────────────────────────────────
+  // ── Loading ─────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <View className="flex-1 bg-background items-center justify-center">
-        <ActivityIndicator size="large" color="#7C3AED" />
-        <ThemedText className="text-muted-foreground text-sm mt-3">
-          Cargando producto...
-        </ThemedText>
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: "#FFFFFF",
+          alignItems: "center",
+          paddingTop: topInset,
+        }}
+      >
+        <View style={{ width: "100%", maxWidth: MAX_CONTENT_WIDTH }}>
+          {/* Skeleton de la imagen */}
+          <Shimmer width="100%" height={300} borderRadius={0} />
+
+          <View style={{ padding: 20 }}>
+            {/* Categoría */}
+            <Shimmer width={100} height={20} borderRadius={12} />
+            <View style={{ height: 8 }} />
+
+            {/* Nombre */}
+            <Shimmer width="70%" height={28} borderRadius={8} />
+            <View style={{ height: 8 }} />
+
+            {/* Descripción */}
+            <Shimmer width="100%" height={16} borderRadius={8} />
+            <View style={{ height: 4 }} />
+            <Shimmer width="80%" height={16} borderRadius={8} />
+            <View style={{ height: 16 }} />
+
+            {/* Precio */}
+            <Shimmer width={120} height={36} borderRadius={8} />
+
+            {/* Separador */}
+            <View
+              style={{
+                height: 24,
+                borderBottomWidth: 0.5,
+                borderColor: "#E5E7EB",
+              }}
+            />
+
+            {/* Título detalles */}
+            <Shimmer width={150} height={20} borderRadius={8} />
+            <View style={{ height: 12 }} />
+
+            {/* Renglones de detalles */}
+            {Array.from({ length: 3 }).map((_, i) => (
+              <View
+                key={i}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginBottom: 12,
+                }}
+              >
+                <Shimmer width={40} height={40} borderRadius={12} />
+                <View style={{ marginLeft: 12, flex: 1 }}>
+                  <Shimmer width="60%" height={14} borderRadius={6} />
+                  <View style={{ height: 4 }} />
+                  <Shimmer width="80%" height={12} borderRadius={6} />
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Skeleton del botón flotante */}
+        <View
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            paddingBottom: insets.bottom + 10,
+            paddingHorizontal: 20,
+            paddingTop: 10,
+            backgroundColor: "rgba(255,255,255,0.95)",
+            borderTopWidth: 0.5,
+            borderTopColor: "#E5E7EB",
+            alignItems: "center",
+          }}
+        >
+          <Shimmer width="100%" height={56} borderRadius={16} />
+        </View>
       </View>
     );
   }
 
-  // ── Error ────────────────────────────────────────────────────────────────
+  // ── Error ───────────────────────────────────────────────────────────
   if (error || !producto) {
     return (
       <Animated.View
         entering={FadeIn.duration(300)}
-        className="flex-1 bg-background items-center justify-center p-6"
+        style={{
+          flex: 1,
+          backgroundColor: "#FFFFFF",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 20,
+          paddingTop: topInset,
+        }}
       >
-        <Ionicons name="alert-circle-outline" size={52} color="#EF4444" />
+        <Ionicons name="alert-circle-outline" size={56} color="#EF4444" />
         <ThemedText className="text-status-error font-bold text-lg text-center mt-4">
           {error ?? "Producto no encontrado"}
         </ThemedText>
-        <TouchableOpacity
+        <Pressable
           onPress={() => router.back()}
-          className="bg-primary px-7 py-3 rounded-lg mt-6"
-          activeOpacity={0.85}
+          className="bg-primary px-8 py-3 rounded-xl mt-6 active:scale-95"
         >
           <ThemedText className="text-white font-semibold">Volver</ThemedText>
-        </TouchableOpacity>
+        </Pressable>
       </Animated.View>
     );
   }
@@ -329,213 +381,118 @@ export default function CatalogoDetailScreen() {
     : producto.precio;
 
   return (
-    // Contenedor principal: ocupa toda la pantalla pero su contenido estará centrado
-    <View style={{ flex: 1, backgroundColor: "#F3F4F6" }}>
+    <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
       <ScrollView
         bounces={false}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
-          alignItems: "center", // Centra el contenedor interior en web
-          paddingBottom: 110,
+          alignItems: "center",
+          paddingBottom: 100 + insets.bottom,
         }}
       >
-        {/* Contenedor tipo "tarjeta" que limita el ancho en pantallas grandes */}
+        {/* ── Galería de imágenes ── */}
+        <Animated.View entering={FadeInDown.duration(400)}>
+          <ImageGallery
+            fotos={producto.fotos}
+            onBack={() => router.back()}
+            containerWidth={containerWidth}
+            topInset={topInset}
+          />
+        </Animated.View>
+
+        {/* ── Contenido ── */}
         <View
           style={{
             width: "100%",
             maxWidth: MAX_CONTENT_WIDTH,
-            backgroundColor: "#FFFFFF",
-            minHeight: "100%",
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.05,
-            shadowRadius: 12,
-            elevation: 2,
+            paddingHorizontal: 20,
           }}
         >
-          {/* ── Carrusel de imágenes ── */}
-          <Animated.View entering={FadeInDown.duration(350)}>
-            <ImageGallery
-              fotos={producto.fotos}
-              onBack={() => router.back()}
-              containerWidth={containerWidth}
-            />
-          </Animated.View>
-
-          {/* ── Info principal ── */}
-          <Animated.View
-            entering={FadeInUp.duration(400).delay(150)}
-            style={{ paddingHorizontal: 20, paddingTop: 20 }}
-          >
+          {/* Información principal */}
+          <Animated.View entering={FadeInUp.duration(400).delay(200)}>
             {producto.categoria && (
-              <View style={{ marginBottom: 10, alignSelf: "flex-start" }}>
-                <ThemedText
-                  style={{
-                    fontSize: 10,
-                    fontWeight: "700",
-                    letterSpacing: 1,
-                    textTransform: "uppercase",
-                    color: "#4C1D95",
-                    backgroundColor: "#F5F3FF",
-                    paddingHorizontal: 12,
-                    paddingVertical: 4,
-                    borderRadius: 9999,
-                    overflow: "hidden",
-                  }}
-                >
+              <View className="mt-6 mb-3 self-start">
+                <ThemedText className="bg-secondary px-4 py-1.5 rounded-full text-secondary-foreground text-xs font-bold uppercase tracking-wider">
                   {producto.categoria.nombre}
                 </ThemedText>
               </View>
             )}
 
-            <ThemedText
-              style={{
-                fontSize: 24, // Un poco más grande para desktop
-                fontWeight: "800",
-                color: "#1E1B4B",
-                lineHeight: 30,
-              }}
-            >
+            <ThemedText className="text-2xl font-extrabold text-foreground leading-tight">
               {producto.nombre}
             </ThemedText>
 
             {producto.descripcion && (
-              <ThemedText
-                style={{
-                  fontSize: 14,
-                  color: "#6B7280",
-                  marginTop: 8,
-                  lineHeight: 22,
-                }}
-              >
+              <ThemedText className="text-base text-muted-foreground mt-3 leading-relaxed">
                 {producto.descripcion}
               </ThemedText>
             )}
 
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "flex-end",
-                marginTop: 16,
-              }}
-            >
-              <ThemedText
-                style={{
-                  fontSize: 32, // Resaltamos más el precio
-                  fontWeight: "900",
-                  color: "#7C3AED",
-                  lineHeight: 36,
-                }}
-              >
+            {/* Precio */}
+            <View className="flex-row items-end mt-5">
+              <ThemedText className="text-4xl font-black text-primary">
                 Bs {precioMostrar}
               </ThemedText>
               {tieneDescuento && (
                 <>
-                  <ThemedText
-                    style={{
-                      fontSize: 16,
-                      color: "#9CA3AF",
-                      textDecorationLine: "line-through",
-                      marginLeft: 10,
-                      marginBottom: 4,
-                    }}
-                  >
+                  <ThemedText className="text-lg text-muted-foreground line-through ml-3 mb-1">
                     Bs {producto.precio}
                   </ThemedText>
-                  <DiscountBadge
-                    original={producto.precio}
-                    discounted={producto.precioDescuento!}
-                  />
+                  <View className="bg-secondary px-2 py-0.5 rounded-full ml-2 mb-1">
+                    <ThemedText className="text-xs font-bold text-secondary-foreground">
+                      -
+                      {Math.round(
+                        ((producto.precio - producto.precioDescuento!) /
+                          producto.precio) *
+                          100,
+                      )}
+                      %
+                    </ThemedText>
+                  </View>
                 </>
               )}
             </View>
           </Animated.View>
 
-          {/* ── Separador ── */}
-          <View
-            style={{
-              height: 1,
-              backgroundColor: "#E5E7EB",
-              marginHorizontal: 20,
-              marginVertical: 24,
-            }}
-          />
+          {/* Separador */}
+          <View className="h-px bg-border my-6" />
 
-          {/* ── Sección de detalles ── */}
-          <Animated.View
-            entering={FadeInUp.duration(400).delay(300)}
-            style={{ paddingHorizontal: 20, paddingBottom: 40 }}
-          >
-            <ThemedText
-              style={{
-                fontSize: 16,
-                fontWeight: "700",
-                color: "#1E1B4B",
-                marginBottom: 16,
-              }}
-            >
+          {/* Detalles */}
+          <Animated.View entering={FadeInUp.duration(400).delay(350)}>
+            <ThemedText className="text-lg font-bold text-foreground mb-4">
               Detalles del producto
             </ThemedText>
-
             {(
               [
                 {
-                  icon: "cube-outline" as const,
+                  icon: "checkmark-circle-outline",
                   label: "Disponibilidad",
                   value: "En stock · entrega inmediata",
                 },
                 {
-                  icon: "shield-checkmark-outline" as const,
+                  icon: "shield-checkmark-outline",
                   label: "Garantía",
                   value: "Producto garantizado",
                 },
                 {
-                  icon: "headset-outline" as const,
+                  icon: "help-circle-outline",
                   label: "Soporte",
                   value: "Soporte técnico al realizar su compra",
                 },
               ] as const
-            ).map(({ icon, label, value }, idx, arr) => (
+            ).map(({ icon, label, value }) => (
               <View
                 key={label}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  paddingVertical: 14,
-                  borderBottomWidth: idx < arr.length - 1 ? 0.5 : 0,
-                  borderBottomColor: "#E5E7EB",
-                  gap: 14,
-                }}
+                className="flex-row items-center bg-muted/50 rounded-xl p-4 mb-3"
               >
-                <View
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 12,
-                    backgroundColor: "#F5F3FF",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
+                <View className="w-10 h-10 rounded-full bg-primary/10 items-center justify-center">
                   <Ionicons name={icon} size={20} color="#7C3AED" />
                 </View>
-                <View style={{ flex: 1 }}>
-                  <ThemedText
-                    style={{
-                      fontSize: 14,
-                      fontWeight: "600",
-                      color: "#1E1B4B",
-                    }}
-                  >
+                <View className="ml-4">
+                  <ThemedText className="text-foreground font-semibold text-sm">
                     {label}
                   </ThemedText>
-                  <ThemedText
-                    style={{
-                      fontSize: 13,
-                      color: "#6B7280",
-                      marginTop: 2,
-                    }}
-                  >
+                  <ThemedText className="text-muted-foreground text-xs mt-0.5">
                     {value}
                   </ThemedText>
                 </View>
@@ -545,62 +502,36 @@ export default function CatalogoDetailScreen() {
         </View>
       </ScrollView>
 
-      {/* ── CTA flotante adaptado a desktop ── */}
+      {/* ── Botón flotante ── */}
       <Animated.View
-        entering={FadeInUp.duration(350).delay(500)}
+        entering={FadeInUp.duration(400).delay(500)}
         style={{
           position: "absolute",
           bottom: 0,
           left: 0,
           right: 0,
-          alignItems: "center", // Centra el contenedor interno
-          backgroundColor: "rgba(255,255,255,0.96)",
+          paddingBottom: insets.bottom + 10,
+          paddingHorizontal: 20,
+          paddingTop: 10,
+          backgroundColor: "rgba(255,255,255,0.95)",
           borderTopWidth: 0.5,
           borderTopColor: "#E5E7EB",
+          alignItems: "center",
         }}
       >
-        <View
-          style={{
-            width: "100%",
-            maxWidth: MAX_CONTENT_WIDTH,
-            paddingHorizontal: 20,
-            paddingVertical: 16,
-          }}
+        <Animated.View
+          style={[cartBtnStyle, { width: "100%", maxWidth: MAX_CONTENT_WIDTH }]}
         >
-          <Animated.View style={cartBtnStyle}>
-            <TouchableOpacity
-              onPress={handleAddToCart}
-              activeOpacity={0.9}
-              style={{
-                backgroundColor: "#7C3AED",
-                paddingVertical: 16,
-                borderRadius: 14,
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-                shadowColor: "#7C3AED",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.25,
-                shadowRadius: 8,
-                elevation: 5,
-              }}
-              accessibilityLabel="Añadir al carrito"
-              accessibilityRole="button"
-            >
-              <Ionicons name="cart-outline" size={22} color="white" />
-              <ThemedText
-                style={{
-                  color: "#FFFFFF",
-                  fontSize: 16,
-                  fontWeight: "700",
-                }}
-              >
-                Añadir al carrito
-              </ThemedText>
-            </TouchableOpacity>
-          </Animated.View>
-        </View>
+          <Pressable
+            onPress={handleAddToCart}
+            className="bg-primary py-4 rounded-2xl flex-row items-center justify-center gap-2 shadow-soft active:scale-95"
+          >
+            <Ionicons name="cart-outline" size={22} color="white" />
+            <ThemedText className="text-white font-bold text-lg">
+              Añadir al carrito
+            </ThemedText>
+          </Pressable>
+        </Animated.View>
       </Animated.View>
     </View>
   );

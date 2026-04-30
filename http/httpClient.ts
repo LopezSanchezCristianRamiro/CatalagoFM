@@ -1,4 +1,5 @@
 // http/httpClient.ts
+import Toast from "react-native-toast-message";
 import { getToken } from "../storage/secureStorage";
 
 export const BASE_URL =
@@ -44,6 +45,12 @@ async function request<T>(
       headers: { ...headers, ...options.headers },
     });
   } catch (networkError: any) {
+    Toast.show({
+      type: "error",
+      text1: "Sin conexión",
+      text2: "No se pudo conectar al servidor. Revisa tu conexión.",
+      visibilityTime: 4000,
+    });
     throw {
       status: 0,
       message: "No se pudo conectar al servidor. Revisa tu conexión.",

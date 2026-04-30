@@ -17,6 +17,8 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 import { ThemedText } from "../../components/ThemedText";
 import { useAuth } from "../../contexts/AuthContext";
 import { httpClient } from "../../http/httpClient";
@@ -34,21 +36,23 @@ export default function CarritoScreen() {
   const subtotal = Number(getTotal());
   const { width: windowWidth } = useWindowDimensions();
 
-  const isDesktop = Platform.OS === "web" && windowWidth >= 1024;
-  const contentWidth = isDesktop ? 1200 : windowWidth;
+  // 1. Usamos un estado para guardar el ancho REAL del contenedor
+  const [containerWidth, setContainerWidth] = useState(windowWidth);
 
-  // PASOS: 1 (Carrito), 2 (Selección Método / Login), 3 (Detalle QR/Entrega)
+  const isDesktop = Platform.OS === "web" && windowWidth >= 1024;
+  const contentWidth = isDesktop ? 1200 : containerWidth;
+  const insets = useSafeAreaInsets(); // 2. Obtén los insets
+
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<
     "contra_entrega" | "qr" | null
   >(null);
 
-  // ANIMACIÓN DE SLIDE (3 pasos)
   const slideAnim = useSharedValue(0);
   useEffect(() => {
     slideAnim.value = withSpring(-(step - 1) * contentWidth, {
-      damping: 22,
+      damping: 25,
       stiffness: 150,
     });
   }, [step, contentWidth]);
@@ -57,7 +61,6 @@ export default function CarritoScreen() {
     transform: [{ translateX: slideAnim.value }],
   }));
 
-  // Callback cuando el pago QR se confirma (polling o manual)
   const onQrConfirmado = useCallback(async () => {
     await ejecutarCrearPedido("qr");
   }, [items]);
@@ -65,7 +68,6 @@ export default function CarritoScreen() {
   const { estadoQr, qrData, isVerifying, generarQr, verificarPago, resetQr } =
     useQrPago(onQrConfirmado);
 
-  // Crear pedido en backend
   const ejecutarCrearPedido = useCallback(
     async (tipoPago: string) => {
       setLoading(true);
@@ -81,7 +83,11 @@ export default function CarritoScreen() {
         clearCart();
         resetAllStates();
         router.replace("/(tabs)/perfil");
-        Alert.alert("¡Éxito!", "Pedido realizado con éxito.");
+        Toast.show({
+          type: "success",
+          text1: "Pedido realizado",
+          text2: `Espera a que te contactemos por medio de tu teléfono celular`,
+        });
       } catch (e: any) {
         Alert.alert("Error", e.message || "Error al procesar pedido");
       } finally {
@@ -98,7 +104,6 @@ export default function CarritoScreen() {
     resetQr();
   };
 
-  // ---------- POLLING AUTOMÁTICO DEL QR ----------
   const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const intentosRef = useRef(0);
   const MAX_INTENTOS = 120;
@@ -151,7 +156,6 @@ export default function CarritoScreen() {
     return detenerPolling;
   }, [step, selectedPayment, estadoQr, verificarPago, resetQr]);
 
-  // Limpiar polling al desmontar
   useEffect(() => {
     return () => {
       detenerPolling();
@@ -159,7 +163,6 @@ export default function CarritoScreen() {
     };
   }, []);
 
-  // Al salir del paso 3, reseteamos intentos y QR
   useEffect(() => {
     if (step !== 3) {
       intentosRef.current = 0;
@@ -167,101 +170,99 @@ export default function CarritoScreen() {
     }
   }, [step]);
 
-  // -------------------------------------------------
-
-  // --- VISTA PASO 1: CARRITO ---
+  // --- VISTA PASO 1 ---
+  // 2. Usamos height: "100%" en lugar de flex-1 para que respete el ancho estrictamente
   const renderPaso1 = () => (
-    <View style={{ width: contentWidth }} className="flex-1 flex-row">
-      <ScrollView
-        className="flex-1 p-4 lg:p-10"
-        showsVerticalScrollIndicator={false}
-      >
-        <ThemedText className="text-4xl font-black mb-8">Tu Carrito</ThemedText>
-        {items.map((item) => (
-          <CarritoItem
-            key={item.idProducto}
-            item={item}
-            onIncrementar={() =>
-              updateCantidad(item.idProducto, item.cantidad + 1)
-            }
-            onDecrementar={() =>
-              updateCantidad(item.idProducto, item.cantidad - 1)
-            }
-            onEliminar={() => removeFromCart(item.idProducto)}
-            onUpdateCantidad={(cantidad) =>
-              updateCantidad(item.idProducto, cantidad)
-            }
-          />
-        ))}
-      </ScrollView>
-      {isDesktop && (
-        <View className="p-10 pt-24">
-          <ResumenPedido
-            subtotal={subtotal}
-            loading={false}
-            buttonText="Continuar al pago"
-            onPress={() => setStep(2)}
-            isDesktop
-          />
-        </View>
-      )}
+    <View style={{ width: contentWidth, height: "100%" }}>
+      <View className={`flex-1 ${isDesktop ? "flex-row" : "flex-col"}`}>
+        <ScrollView
+          className="flex-1 px-4 lg:p-10"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingTop: insets.top + 20,
+            paddingBottom: 100,
+          }}
+        >
+          <ThemedText className="text-4xl font-black mb-8">
+            Tu Carrito
+          </ThemedText>
+          {items.map((item) => (
+            <CarritoItem
+              key={item.idProducto}
+              item={item}
+              onIncrementar={() =>
+                updateCantidad(item.idProducto, item.cantidad + 1)
+              }
+              onDecrementar={() =>
+                updateCantidad(item.idProducto, item.cantidad - 1)
+              }
+              onEliminar={() => removeFromCart(item.idProducto)}
+              onUpdateCantidad={(cantidad) =>
+                updateCantidad(item.idProducto, cantidad)
+              }
+            />
+          ))}
+        </ScrollView>
+
+        {isDesktop && (
+          <View className="p-10 pt-24">
+            <ResumenPedido
+              subtotal={subtotal}
+              loading={false}
+              buttonText="Continuar al pago"
+              onPress={() => setStep(2)}
+              isDesktop
+            />
+          </View>
+        )}
+      </View>
     </View>
   );
 
-  // --- VISTA PASO 2: LOGIN / SELECCIÓN DE MÉTODO ---
+  // --- VISTA PASO 2 ---
   const renderPaso2 = () => (
     <View
-      style={{ width: contentWidth }}
-      className="flex-1 items-center justify-center px-6"
+      style={{ width: contentWidth, height: "100%" }}
+      className="items-center justify-center px-6"
     >
-      <View className="w-full max-w-2xl">
+      <View className="w-full max-w-2xl items-center">
         <Pressable
           onPress={() => setStep(1)}
           className="flex-row items-center mb-10 self-start"
         >
           <Ionicons name="arrow-back" size={22} color="#7C3AED" />
           <ThemedText className="ml-2 text-primary font-bold">
-            Volver al carrito
+            Volver
           </ThemedText>
         </Pressable>
 
         {!user ? (
-          // USUARIO NO LOGUEADO
-          <View className="items-center">
+          <View className="items-center w-full">
             <Ionicons name="person-circle-outline" size={72} color="#8B5CF6" />
             <ThemedText className="text-2xl font-bold mt-4 mb-2 text-center">
-              Inicia sesión o regístrate
+              Inicia sesión
             </ThemedText>
             <ThemedText className="text-muted-foreground text-sm text-center mb-8">
-              Necesitas una cuenta para finalizar tu pedido.
+              Necesitas una cuenta para finalizar.
             </ThemedText>
             <Pressable
               onPress={() => router.push("/login")}
-              className="bg-primary rounded-xl py-4 w-72 items-center mb-3 active:scale-95"
+              className="bg-primary rounded-xl py-4 w-full max-w-xs items-center mb-3 active:scale-95"
             >
-              <ThemedText className="text-primary-foreground font-bold text-base">
+              <ThemedText className="text-primary-foreground font-bold">
                 Iniciar sesión
-              </ThemedText>
-            </Pressable>
-            <Pressable
-              onPress={() => router.push("/register")}
-              className="bg-secondary rounded-xl py-4 w-72 items-center border border-border active:scale-95"
-            >
-              <ThemedText className="text-secondary-foreground font-bold text-base">
-                Registrarse
               </ThemedText>
             </Pressable>
           </View>
         ) : (
-          // USUARIO LOGUEADO: SELECCIÓN DE MÉTODO
           <>
             <ThemedText className="text-3xl font-black mb-2 text-center">
-              Método de pago
+              Pago
             </ThemedText>
-            <ThemedText className="text-muted-foreground mb-12 text-center text-lg">
+            <ThemedText className="text-muted-foreground mb-12 text-center">
               ¿Cómo deseas pagar?
             </ThemedText>
-            <View className="flex-row justify-center gap-6">
+            <View className="flex-row justify-center flex-wrap gap-4">
               <TarjetaPagoCuadrada
                 icon="cash-outline"
                 titulo="Contra Entrega"
@@ -272,11 +273,10 @@ export default function CarritoScreen() {
               />
               <TarjetaPagoCuadrada
                 icon="qr-code-outline"
-                titulo="Pago con QR"
+                titulo="QR"
                 onPress={() => {
                   setSelectedPayment("qr");
-                  generarQr(subtotal, "Pago de pedido");
-                  intentosRef.current = 0; // reiniciar contador de intentos
+                  generarQr(subtotal, "Pago");
                   setStep(3);
                 }}
               />
@@ -287,45 +287,46 @@ export default function CarritoScreen() {
     </View>
   );
 
-  // --- VISTA PASO 3: CONFIRMACIÓN / QR ---
+  // --- VISTA PASO 3 ---
   const renderPaso3 = () => (
     <View
-      style={{ width: contentWidth }}
-      className="flex-1 items-center justify-center px-6"
+      style={{ width: contentWidth, height: "100%" }}
+      className="items-center justify-center px-6"
     >
       <View className="w-full max-w-lg items-center">
         <Pressable
           onPress={() => {
             setStep(2);
             resetQr();
-            setSelectedPayment(null);
           }}
-          className="flex-row items-center mb-8 self-start bg-secondary/20 px-4 py-2 rounded-full"
+          className="self-start mb-6 flex-row items-center"
         >
           <Ionicons name="arrow-back" size={20} color="#7C3AED" />
           <ThemedText className="ml-2 text-primary font-bold">
-            Cambiar método
+            Cambiar
           </ThemedText>
         </Pressable>
 
-        <View className="w-full bg-card p-10 rounded-[40px] border border-border shadow-2xl items-center">
+        <View className="w-full bg-card p-6 rounded-[40px] border border-border items-center">
           {selectedPayment === "contra_entrega" ? (
-            // PAGO CONTRA ENTREGA
             <View className="items-center w-full">
               <View className="w-24 h-24 bg-primary/10 rounded-full items-center justify-center mb-6">
                 <Ionicons name="bicycle-outline" size={48} color="#7C3AED" />
               </View>
-              <ThemedText className="text-2xl font-bold mb-2">
+              <ThemedText className="text-xl font-bold mt-4">
                 Verificar Pedido
               </ThemedText>
-              <ThemedText className="text-muted-foreground text-center mb-10 text-base">
+              <ThemedText className="text-muted-foreground text-center text-base mt-2">
                 Pagarás un total de Bs. {subtotal.toFixed(2)} al recibir tus
                 productos en casa.
               </ThemedText>
+              <ThemedText className="text-center font-bold my-4 text-lg">
+                Total: Bs. {subtotal.toFixed(2)}
+              </ThemedText>
               <Pressable
+                className="bg-primary w-full py-4 rounded-xl items-center shadow-lg active:scale-95 mt-2"
                 onPress={() => ejecutarCrearPedido("contra_entrega")}
                 disabled={loading}
-                className="bg-primary w-full py-5 rounded-2xl items-center shadow-lg active:scale-95"
               >
                 {loading ? (
                   <ActivityIndicator color="white" />
@@ -337,12 +338,11 @@ export default function CarritoScreen() {
               </Pressable>
             </View>
           ) : (
-            // PAGO CON QR
             <View className="items-center w-full">
               <ThemedText className="text-2xl font-bold mb-1">
                 Pago con QR
               </ThemedText>
-              <ThemedText className="text-muted-foreground mb-8">
+              <ThemedText className="text-muted-foreground mb-6 font-bold">
                 Total: Bs. {subtotal.toFixed(2)}
               </ThemedText>
 
@@ -390,9 +390,9 @@ export default function CarritoScreen() {
                 estadoQr !== "generando" &&
                 estadoQr !== "confirmado" && (
                   <Pressable
-                    onPress={() => verificarPago(false)} // manual, muestra loading
+                    onPress={() => verificarPago(false)}
                     disabled={isVerifying}
-                    className="mt-8 bg-primary w-full py-5 rounded-2xl items-center shadow-md active:scale-95"
+                    className="mt-6 bg-primary w-full py-4 rounded-2xl items-center shadow-md active:scale-95"
                   >
                     {isVerifying ? (
                       <ActivityIndicator color="white" />
@@ -419,26 +419,34 @@ export default function CarritoScreen() {
   if (items.length === 0) return <CarritoVacio />;
 
   return (
-    <View className="flex-1 bg-background items-center">
+    // 3. Calculamos dinámicamente el ancho exacto libre en la pantalla para evitar desfases
+    <View
+      className="flex-1 bg-background items-center w-full"
+      onLayout={(e) => {
+        const layoutWidth = e.nativeEvent.layout.width;
+        if (layoutWidth > 0) {
+          setContainerWidth(layoutWidth);
+        }
+      }}
+    >
       <View style={{ width: contentWidth }} className="flex-1 overflow-hidden">
         <Animated.View
           style={[
-            { width: contentWidth * 3, flex: 1, flexDirection: "row" },
+            {
+              width: contentWidth * 3,
+              flex: 1,
+              flexDirection: "row",
+              alignItems: "stretch",
+            },
             animatedContainerStyle,
           ]}
         >
-          {/* PASO 1 */}
           {renderPaso1()}
-
-          {/* PASO 2 */}
           {renderPaso2()}
-
-          {/* PASO 3 */}
           {renderPaso3()}
         </Animated.View>
       </View>
 
-      {/* Footer móvil solo en paso 1 */}
       {!isDesktop && step === 1 && (
         <ResumenPedido
           subtotal={subtotal}
@@ -451,7 +459,7 @@ export default function CarritoScreen() {
   );
 }
 
-// Tarjeta cuadrada reutilizable
+// 4. Tarjetas reducidas de 180px a 150px para que encajen lado a lado en pantallas pequeñas
 function TarjetaPagoCuadrada({
   icon,
   titulo,
@@ -464,12 +472,12 @@ function TarjetaPagoCuadrada({
   return (
     <Pressable
       onPress={onPress}
-      className="bg-card border border-border rounded-[32px] w-[180px] h-[180px] items-center justify-center shadow-sm active:bg-secondary/10 active:scale-95"
+      className="bg-card border border-border rounded-[28px] w-[150px] h-[150px] items-center justify-center shadow-sm active:bg-secondary/10 active:scale-95"
     >
-      <View className="w-16 h-16 rounded-full bg-primary/10 items-center justify-center mb-4">
-        <Ionicons name={icon} size={34} color="#7C3AED" />
+      <View className="w-14 h-14 rounded-full bg-primary/10 items-center justify-center mb-3">
+        <Ionicons name={icon} size={32} color="#7C3AED" />
       </View>
-      <ThemedText className="font-bold text-lg text-center px-2">
+      <ThemedText className="font-bold text-base text-center px-2">
         {titulo}
       </ThemedText>
     </Pressable>

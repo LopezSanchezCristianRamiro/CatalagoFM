@@ -12,6 +12,8 @@ import { ThemedText } from "../../components/ThemedText";
 import { FilterBar } from "./components/FilterBar";
 import { ProductGridCard } from "./components/ProductGridCard";
 import { PromoCarousel } from "./components/PromoCarousel";
+import { SkeletonProductCard } from "./components/SkeletonProductCard";
+import { SkeletonPromoCarousel } from "./components/SkeletonPromoCarousel";
 import { useCatalogo } from "./hooks/useCatalogo";
 
 export default function CatalogoScreen() {
@@ -104,14 +106,17 @@ export default function CatalogoScreen() {
         }
       >
         {/* Carrusel de promociones (Ahora ocupa el 100% del ancho) */}
-        {promociones.length > 0 && (
+        {/* Carrusel de promociones o skeleton */}
+        {loadingInit ? (
+          <SkeletonPromoCarousel />
+        ) : promociones.length > 0 ? (
           <PromoCarousel
             promociones={promociones}
             onPressPromo={(prod) =>
               router.push(`/catalogo/${prod.idProducto}` as any)
             }
           />
-        )}
+        ) : null}
 
         {/* Barra de filtros con padding restaurado */}
         <View className="pt-6 px-4">
@@ -124,16 +129,6 @@ export default function CatalogoScreen() {
           />
         </View>
 
-        {/* Estados de carga y vacío */}
-        {showSpinnerInList && (
-          <View className="py-20 px-4 items-center">
-            <ActivityIndicator size="large" color="#7C3AED" />
-            <ThemedText className="mt-4 text-muted-foreground">
-              Buscando productos...
-            </ThemedText>
-          </View>
-        )}
-
         {!loadingInit && !showSpinnerInList && productos.length === 0 && (
           <View className="py-20 px-4 items-center">
             <ThemedText className="text-muted-foreground">
@@ -143,7 +138,31 @@ export default function CatalogoScreen() {
         )}
 
         {/* Grid fluido estilo Metasoft con padding restaurado */}
-        {productos.length > 0 && (
+        {loadingInit ? (
+          <View
+            className="flex-row flex-wrap justify-center px-4"
+            style={{ gap: 16 }}
+          >
+            {Array.from({ length: 6 }).map((_, i) => (
+              <View
+                key={`skeleton-${i}`}
+                className="flex-1"
+                style={{ minWidth: 280, maxWidth: 330 }}
+              >
+                <SkeletonProductCard />
+              </View>
+            ))}
+            {/* Fantasmas para alinear */}
+            {Array.from({ length: 4 }).map((_, i) => (
+              <View
+                key={`phantom-${i}`}
+                className="flex-1"
+                style={{ minWidth: 280, maxWidth: 330, height: 0 }}
+                pointerEvents="none"
+              />
+            ))}
+          </View>
+        ) : productos.length > 0 ? (
           <>
             <View
               className="flex-row flex-wrap justify-center px-4"
@@ -183,6 +202,14 @@ export default function CatalogoScreen() {
               </View>
             )}
           </>
+        ) : (
+          !showSpinnerInList && (
+            <View className="py-20 px-4 items-center">
+              <ThemedText className="text-muted-foreground">
+                No se encontraron productos.
+              </ThemedText>
+            </View>
+          )
         )}
       </ScrollView>
     </View>

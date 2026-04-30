@@ -72,7 +72,7 @@ export function CarritoItem({
         </ThemedText>
       </View>
 
-      <View className="flex-row items-center gap-1.5">
+      <View className="flex-row items-center bg-secondary/10 gap-1.5">
         <Pressable
           onPress={onDecrementar}
           className="w-8 h-8 rounded-full bg-muted items-center justify-center active:bg-primary/20 active:scale-90"
@@ -80,17 +80,18 @@ export function CarritoItem({
         >
           <Ionicons name="remove" size={18} color="#6B7280" />
         </Pressable>
-
-        <TextInput
-          value={inputValue}
-          onChangeText={setInputValue}
-          keyboardType="numeric"
-          selectTextOnFocus
-          onSubmitEditing={handleEndEditing}
-          onBlur={handleEndEditing}
-          className="w-12 h-8 text-center font-bold text-foreground text-sm bg-white border border-border rounded-lg px-1"
-        />
-
+        <View className="px-3 items-center justify-center">
+          <TextInput
+            value={inputValue}
+            onChangeText={setInputValue}
+            keyboardType="numeric"
+            selectTextOnFocus
+            onSubmitEditing={handleEndEditing}
+            onBlur={handleEndEditing}
+            style={{ textAlignVertical: "center" }}
+            className="w-12 h-11 text-center font-bold text-foreground text-sm bg-white border border-border rounded-lg py-1 px-1"
+          />
+        </View>
         <Pressable
           onPress={onIncrementar}
           className="w-8 h-8 rounded-full bg-muted items-center justify-center active:bg-primary/20 active:scale-90"
