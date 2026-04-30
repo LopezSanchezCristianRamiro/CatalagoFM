@@ -1,5 +1,10 @@
 import { useMemo, useState } from "react";
-import { ActivityIndicator, ScrollView, View, useWindowDimensions } from "react-native";
+import {
+  ActivityIndicator,
+  ScrollView,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { ThemedText } from "../../components/ThemedText";
 
 import AdminFilters from "./components/AdminFilters";
@@ -11,20 +16,24 @@ import { usePedidos } from "./hooks/usePedidos";
 
 function parseFechaInput(value: string) {
   if (!value) return null;
+
   const [day, month, year] = value.split("/");
   if (!day || !month || !year) return null;
+
   return new Date(Number(year), Number(month) - 1, Number(day));
 }
 
 function esMismaFechaODespues(fecha: Date, inicio: Date) {
   const f = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
   const i = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate());
+
   return f >= i;
 }
 
 function esMismaFechaOAntes(fecha: Date, fin: Date) {
   const f = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
   const e = new Date(fin.getFullYear(), fin.getMonth(), fin.getDate());
+
   return f <= e;
 }
 
@@ -40,6 +49,13 @@ export default function AdministracionScreen() {
   const [categoria, setCategoria] = useState("todas");
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
+
+  const hayFiltrosActivos =
+    search.trim() !== "" ||
+    estado !== "todos" ||
+    categoria !== "todas" ||
+    fechaInicio !== "" ||
+    fechaFin !== "";
 
   const pedidosFiltrados = useMemo(() => {
     const inicio = parseFechaInput(fechaInicio);
@@ -95,6 +111,7 @@ export default function AdministracionScreen() {
 
   const pedidosDelMes = pedidos.filter((pedido) => {
     const fecha = new Date(pedido.fechaCreacion);
+
     return (
       fecha.getMonth() === hoy.getMonth() &&
       fecha.getFullYear() === hoy.getFullYear()
@@ -108,6 +125,7 @@ export default function AdministracionScreen() {
 
   const pedidosHoy = pedidos.filter((pedido) => {
     const fecha = new Date(pedido.fechaCreacion);
+
     return (
       fecha.getDate() === hoy.getDate() &&
       fecha.getMonth() === hoy.getMonth() &&
@@ -139,7 +157,11 @@ export default function AdministracionScreen() {
         >
           <AdminHeader isMobile={isMobile} />
 
-          <View className={isMobile ? "w-full" : isTablet ? "w-[430px]" : "w-[520px]"}>
+          <View
+            className={
+              isMobile ? "w-full" : isTablet ? "w-[430px]" : "w-[520px]"
+            }
+          >
             <AdminSearchBar
               search={search}
               setSearch={setSearch}
@@ -154,28 +176,28 @@ export default function AdministracionScreen() {
 
         <View className={isMobile ? "gap-4 mb-10" : "flex-row gap-6 mb-12"}>
           <AdminMetricCard
-  title="Ventas Totales (Mes)"
-  value={`Bs. ${totalMes.toFixed(2)}`}
-  subtitle={`${pedidosDelMes.length} pedidos este mes`}
-  icon="card-outline"
-  isMobile={isMobile}
-/>
+            title="Ventas Totales (Mes)"
+            value={`Bs. ${totalMes.toFixed(2)}`}
+            subtitle={`${pedidosDelMes.length} pedidos este mes`}
+            icon="card-outline"
+            isMobile={isMobile}
+          />
 
-<AdminMetricCard
-  title="Pedidos de Hoy"
-  value={String(pedidosHoy)}
-  subtitle="Pedidos registrados hoy"
-  icon="bag-handle-outline"
-  isMobile={isMobile}
-/>
+          <AdminMetricCard
+            title="Pedidos de Hoy"
+            value={String(pedidosHoy)}
+            subtitle="Pedidos registrados hoy"
+            icon="bag-handle-outline"
+            isMobile={isMobile}
+          />
 
-<AdminMetricCard
-  title="Cuentas Activas"
-  value={String(cuentasActivas)}
-  subtitle="Clientes con pedidos"
-  icon="people-outline"
-  isMobile={isMobile}
-/>
+          <AdminMetricCard
+            title="Cuentas Activas"
+            value={String(cuentasActivas)}
+            subtitle="Clientes con pedidos"
+            icon="people-outline"
+            isMobile={isMobile}
+          />
         </View>
 
         <View
@@ -185,13 +207,7 @@ export default function AdministracionScreen() {
               : "flex-row justify-between items-center mb-5"
           }
         >
-          <ThemedText
-            className={
-              isMobile
-                ? "text-2xl font-bold text-[#050816]"
-                : "text-2xl font-bold text-[#050816]"
-            }
-          >
+          <ThemedText className="text-2xl font-bold text-[#050816]">
             Pedidos Recientes
           </ThemedText>
 
@@ -204,24 +220,32 @@ export default function AdministracionScreen() {
           />
         </View>
 
-        <View className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
-          {pedidosFiltrados.length === 0 ? (
-            <View className="p-6">
-              <ThemedText className="text-center text-gray-500">
-                No hay pedidos para mostrar.
-              </ThemedText>
-            </View>
-          ) : (
-            pedidosFiltrados.map((pedido) => (
-              <PedidoCard
-  key={pedido.idPedido}
-  pedido={pedido}
-  isMobile={isMobile}
-  onEstadoChange={actualizarEstado}
-/>
-            ))
-          )}
-        </View>
+        {!hayFiltrosActivos ? (
+          <View className="mt-6 bg-white rounded-xl p-6 border border-gray-100">
+            <ThemedText className="text-center text-gray-400">
+              Usa los filtros o el buscador para ver pedidos.
+            </ThemedText>
+          </View>
+        ) : (
+          <View className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
+            {pedidosFiltrados.length === 0 ? (
+              <View className="p-6">
+                <ThemedText className="text-center text-gray-500">
+                  No se encontraron resultados.
+                </ThemedText>
+              </View>
+            ) : (
+              pedidosFiltrados.map((pedido) => (
+                <PedidoCard
+                  key={pedido.idPedido}
+                  pedido={pedido}
+                  isMobile={isMobile}
+                  onEstadoChange={actualizarEstado}
+                />
+              ))
+            )}
+          </View>
+        )}
       </View>
     </ScrollView>
   );

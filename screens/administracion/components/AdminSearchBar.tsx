@@ -33,13 +33,9 @@ export default function AdminSearchBar({
   return (
     <>
       <View
-        className={
-          isMobile
-            ? "bg-white border border-gray-100 rounded-2xl p-4 shadow-sm gap-4"
-            : "bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex-row gap-4 items-end"
-        }
+       className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm gap-4"
       >
-        <View className={isMobile ? "w-full" : "flex-1"}>
+        <View className="w-full">
           <ThemedText className="text-[10px] font-bold text-[#141442] mb-2">
             PERÍODO
           </ThemedText>
@@ -62,7 +58,7 @@ export default function AdminSearchBar({
           </Pressable>
         </View>
 
-        <View className={isMobile ? "w-full" : "flex-[1.2]"}>
+        <View className="w-full">
           <ThemedText className="text-[10px] font-bold text-[#141442] mb-2">
             BUSCAR
           </ThemedText>
