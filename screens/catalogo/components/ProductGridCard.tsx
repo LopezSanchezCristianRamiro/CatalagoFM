@@ -1,10 +1,11 @@
 // screens/catalogo/components/ProductGridCard.tsx
 import { Ionicons } from "@expo/vector-icons";
-import React, { useCallback } from "react";
+import { LinearGradient } from "expo-linear-gradient";
+import React, { useCallback, useRef } from "react";
 import {
-  Image,
   Platform,
   Pressable,
+  StyleSheet,
   View,
   useWindowDimensions,
 } from "react-native";
@@ -19,6 +20,7 @@ import Toast from "react-native-toast-message";
 import { ThemedText } from "../../../components/ThemedText";
 import { useCartStore } from "../../../store/cartStore";
 import type { ProductoCatalogo } from "../types/catalogo.types";
+import { useCartAnimation } from "./CartAnimationContext";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -29,24 +31,22 @@ interface ProductGridCardProps {
 
 export function ProductGridCard({ producto, onPress }: ProductGridCardProps) {
   const addToCart = useCartStore((state) => state.addToCart);
+  const { triggerFly } = useCartAnimation();
+  const cardRef = useRef<View>(null);
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === "web" && width >= 1024;
 
+  // Valores compartidos para animaciones
   const scale = useSharedValue(1);
-  const glowOpacity = useSharedValue(0);
-  const borderProgress = useSharedValue(0);
   const rotateX = useSharedValue(0);
   const rotateY = useSharedValue(0);
 
+  // Feedback "+1"
   const feedbackOpacity = useSharedValue(0);
   const feedbackTranslateY = useSharedValue(0);
   const feedbackScale = useSharedValue(0.5);
 
-  const glowStyle = useAnimatedStyle(() => ({
-    opacity: glowOpacity.value,
-    transform: [{ scale: interpolate(borderProgress.value, [0, 1], [0.8, 1]) }],
-  }));
-
+  // Estilo de la tarjeta con escala y rotación 3D
   const cardStyle = useAnimatedStyle(() => ({
     transform: [
       { scale: scale.value },
@@ -60,6 +60,7 @@ export function ProductGridCard({ producto, onPress }: ProductGridCardProps) {
     ],
   }));
 
+  // Feedback "+1"
   const feedbackStyle = useAnimatedStyle(() => ({
     opacity: feedbackOpacity.value,
     transform: [
@@ -68,18 +69,15 @@ export function ProductGridCard({ producto, onPress }: ProductGridCardProps) {
     ],
   }));
 
+  // Handlers de interacción (mouse + touch)
   const handleMouseEnter = useCallback(() => {
     if (!isDesktop) return;
-    scale.value = withSpring(1.02, { damping: 12, stiffness: 200 });
-    glowOpacity.value = withSpring(1, { damping: 12, stiffness: 200 });
-    borderProgress.value = withSpring(1, { damping: 12, stiffness: 200 });
+    scale.value = withSpring(1.2, { damping: 12, stiffness: 200 });
   }, [isDesktop]);
 
   const handleMouseLeave = useCallback(() => {
     if (!isDesktop) return;
     scale.value = withSpring(1, { damping: 12, stiffness: 200 });
-    glowOpacity.value = withSpring(0, { damping: 12, stiffness: 200 });
-    borderProgress.value = withSpring(0, { damping: 12, stiffness: 200 });
     rotateX.value = withSpring(0, { damping: 12, stiffness: 200 });
     rotateY.value = withSpring(0, { damping: 12, stiffness: 200 });
   }, [isDesktop]);
@@ -95,11 +93,11 @@ export function ProductGridCard({ producto, onPress }: ProductGridCardProps) {
       } = e.currentTarget.getBoundingClientRect();
       const x = e.clientX - left;
       const y = e.clientY - top;
-      rotateX.value = withSpring(interpolate(y, [0, h], [10, -10]), {
+      rotateX.value = withSpring(interpolate(y, [0, h], [15, -15]), {
         damping: 12,
         stiffness: 200,
       });
-      rotateY.value = withSpring(interpolate(x, [0, w], [-10, 10]), {
+      rotateY.value = withSpring(interpolate(x, [0, w], [-15, 15]), {
         damping: 12,
         stiffness: 200,
       });
@@ -108,38 +106,27 @@ export function ProductGridCard({ producto, onPress }: ProductGridCardProps) {
   );
 
   const handlePressIn = useCallback(() => {
-    if (!isDesktop) {
-      scale.value = withSpring(0.97, { damping: 12, stiffness: 200 });
-      glowOpacity.value = withSpring(1, { damping: 12, stiffness: 200 });
-      borderProgress.value = withSpring(1, { damping: 12, stiffness: 200 });
-    }
-  }, [isDesktop]);
+    scale.value = withSpring(0.96, { damping: 12, stiffness: 200 });
+  }, []);
 
   const handlePressOut = useCallback(() => {
-    if (!isDesktop) {
-      scale.value = withSpring(1, { damping: 12, stiffness: 200 });
-      glowOpacity.value = withSpring(0, { damping: 12, stiffness: 200 });
-      borderProgress.value = withSpring(0, { damping: 12, stiffness: 200 });
-    }
-  }, [isDesktop]);
+    scale.value = withSpring(1, { damping: 12, stiffness: 200 });
+  }, []);
 
   const playFeedbackAnimation = () => {
     feedbackOpacity.value = 1;
     feedbackTranslateY.value = 0;
     feedbackScale.value = 0.5;
-    feedbackOpacity.value = withTiming(0, { duration: 1000 });
-    feedbackTranslateY.value = withTiming(-50, { duration: 1000 });
-    feedbackScale.value = withTiming(1.5, { duration: 1000 });
+    feedbackOpacity.value = withTiming(0, { duration: 800 });
+    feedbackTranslateY.value = withTiming(-40, { duration: 800 });
+    feedbackScale.value = withTiming(1.5, { duration: 800 });
   };
 
-  const handleAddToCart = () => {
-    // Añadir el producto
+  const handleAddToCart = (e: any) => {
+    e.stopPropagation?.();
     addToCart(producto as any);
 
-    // Ocultar cualquier toast anterior
     Toast.hide();
-
-    // Pequeño retardo para garantizar que el hide se complete antes de mostrar el nuevo
     setTimeout(() => {
       Toast.show({
         type: "success",
@@ -149,14 +136,23 @@ export function ProductGridCard({ producto, onPress }: ProductGridCardProps) {
       });
     }, 100);
 
-    // Animación visual "+1"
     playFeedbackAnimation();
+
+    // Animación de vuelo al carrito
+    if (cardRef.current) {
+      cardRef.current.measureInWindow((x, y, w, h) => {
+        triggerFly(x, y, w, h, producto.fotos?.[0]?.urlFoto ?? undefined);
+      });
+    }
   };
 
-  const imageUrl =
-    producto.fotos && producto.fotos.length > 0
-      ? producto.fotos[0].urlFoto
-      : null;
+  const imageUrl = producto.fotos?.[0]?.urlFoto;
+  const tieneDescuento = producto.precioDescuento != null;
+  const descuentoPorcentaje = tieneDescuento
+    ? Math.round(
+        ((producto.precio - producto.precioDescuento!) / producto.precio) * 100,
+      )
+    : 0;
 
   return (
     <AnimatedPressable
@@ -171,101 +167,102 @@ export function ProductGridCard({ producto, onPress }: ProductGridCardProps) {
           }
         : {})}
       className="w-full p-2"
-      style={cardStyle}
+      style={[cardStyle, { aspectRatio: 1.6 }]}
       accessibilityRole="button"
     >
-      <View className="relative">
-        {/* Glow */}
-        <Animated.View
-          pointerEvents="none"
-          style={[
-            glowStyle,
-            {
-              position: "absolute",
-              top: -2,
-              left: -2,
-              right: -2,
-              bottom: -2,
-              borderRadius: 14,
-              backgroundColor: "transparent",
-              borderWidth: 2,
-              borderColor: "#7C3AED55",
-              shadowColor: "#7C3AED",
-              shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: 0.6,
-              shadowRadius: 12,
-              elevation: 10,
-            },
-          ]}
+      <View
+        ref={cardRef}
+        collapsable={false}
+        className="relative bg-zinc-900 rounded-[32px] overflow-hidden h-48 shadow-xl shadow-black/40"
+      >
+        {/* Imagen de fondo con zoom suave */}
+        {imageUrl ? (
+          <Animated.Image
+            source={{ uri: imageUrl }}
+            style={[{ width: "100%", height: "100%", position: "absolute" }]}
+            resizeMode="cover"
+          />
+        ) : (
+          <View className="absolute inset-0 items-center justify-center bg-zinc-800">
+            <Ionicons name="image-outline" size={40} color="#444" />
+          </View>
+        )}
+
+        {/* Gradiente inferior */}
+        <LinearGradient
+          colors={["transparent", "rgba(0,0,0,0.1)", "rgba(0,0,0,0.85)"]}
+          locations={[0, 0.6, 1]}
+          className="absolute inset-0"
         />
 
-        {/* Tarjeta */}
-        <View className="bg-card rounded-xl overflow-hidden border border-border">
-          {imageUrl ? (
-            <Image
-              source={{ uri: imageUrl }}
-              className="w-full h-36 bg-zinc-100"
-              resizeMode="cover"
-            />
-          ) : (
-            <View className="w-full h-36 bg-zinc-200 items-center justify-center">
-              <Ionicons name="image-outline" size={32} color="#9CA3AF" />
-            </View>
-          )}
-
-          <View className="p-3">
-            <ThemedText
-              className="font-bold text-foreground text-base mb-1"
-              numberOfLines={1}
-            >
-              {producto.nombre}
-            </ThemedText>
-
-            <View className="flex-row items-center justify-between mt-2">
-              <View>
-                {producto.precioDescuento ? (
-                  <>
-                    <ThemedText className="font-bold text-primary text-lg leading-tight">
-                      Bs {producto.precioDescuento}
-                    </ThemedText>
-                    <ThemedText className="text-muted-foreground text-xs line-through leading-tight">
-                      Bs {producto.precio}
-                    </ThemedText>
-                  </>
-                ) : (
-                  <ThemedText className="font-bold text-primary text-lg">
+        {/* Contenido textual */}
+        <View className="flex-1 justify-end px-5 pb-5">
+          <View className="flex-row items-center justify-between">
+            <View className="flex-1 mr-3">
+              <ThemedText
+                className="text-white/70 font-semibold text-[11px] mb-0.5 uppercase tracking-wider"
+                numberOfLines={1}
+                style={{ textShadowColor: "black", textShadowRadius: 3 }}
+              >
+                {producto.nombre}
+              </ThemedText>
+              {tieneDescuento ? (
+                <View className="flex-row items-baseline gap-2">
+                  <ThemedText
+                    className="text-white font-black text-lg leading-none"
+                    style={{ textShadowColor: "black", textShadowRadius: 3 }}
+                  >
+                    Bs {producto.precioDescuento}
+                  </ThemedText>
+                  <ThemedText
+                    className="text-white/50 text-xs line-through"
+                    style={{ textShadowColor: "black", textShadowRadius: 2 }}
+                  >
                     Bs {producto.precio}
                   </ThemedText>
-                )}
-              </View>
-
-              {/* Botón grande con ícono */}
-              <View className="relative">
-                <Pressable
-                  onPress={handleAddToCart}
-                  className="bg-violet-600 rounded-full w-12 h-12 items-center justify-center active:scale-90 shadow-lg"
-                  accessibilityLabel="Agregar al carrito"
+                  <View className="bg-[#D946EF] px-2 py-0.5 rounded-full ml-auto">
+                    <ThemedText className="text-white font-black text-[10px]">
+                      -{descuentoPorcentaje}%
+                    </ThemedText>
+                  </View>
+                </View>
+              ) : (
+                <ThemedText
+                  className="text-white font-black text-lg leading-none"
+                  style={{ textShadowColor: "black", textShadowRadius: 3 }}
                 >
-                  <Ionicons name="add" size={28} color="white" />
-                </Pressable>
+                  Bs {producto.precio}
+                </ThemedText>
+              )}
+            </View>
 
-                {/* Feedback "+1" */}
-                <Animated.View
-                  pointerEvents="none"
-                  style={[
-                    {
-                      position: "absolute",
-                      right: 0,
-                      bottom: 48,
-                    },
-                    feedbackStyle,
-                  ]}
-                >
-                  <ThemedText className="text-primary font-black text-2xl">
-                    +1
-                  </ThemedText>
-                </Animated.View>
-              </View>
+            {/* Botón de carrito con gradiente */}
+            <View className="relative">
+              <Pressable
+                onPress={handleAddToCart}
+                className="w-10 h-10 rounded-full items-center justify-center active:scale-75 overflow-hidden shadow-lg"
+              >
+                <LinearGradient
+                  colors={["#8B5CF6", "#D946EF"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={StyleSheet.absoluteFill}
+                />
+                <Ionicons name="cart" size={18} color="white" />
+              </Pressable>
+
+              {/* Indicador "+1" */}
+              <Animated.View
+                pointerEvents="none"
+                style={[
+                  { position: "absolute", top: -18, right: 0 },
+                  feedbackStyle,
+                ]}
+              >
+                <ThemedText className="text-violet-300 font-bold text-xs">
+                  +1
+                </ThemedText>
+              </Animated.View>
             </View>
           </View>
         </View>

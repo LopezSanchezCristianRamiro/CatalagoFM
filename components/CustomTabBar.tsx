@@ -2,6 +2,7 @@
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useCartAnimation } from "../screens/catalogo/components/CartAnimationContext";
 import { CartBadge } from "./CartBadge";
 import { ThemedText } from "./ThemedText";
 
@@ -18,7 +19,7 @@ export function CustomTabBar({
   isAdmin,
 }: CustomTabBarProps) {
   const insets = useSafeAreaInsets();
-
+  const { cartRef } = useCartAnimation();
   const filteredRoutes = state.routes.filter(
     (route) => !(!isAdmin && ADMIN_ONLY_ROUTES.includes(route.name)),
   );
@@ -68,13 +69,14 @@ export function CustomTabBar({
                   children: "",
                 })
               : (options.tabBarLabel ?? route.name);
-            
-          const CART_ROUTE = "carrito"; 
+
+          const CART_ROUTE = "carrito";
 
           return (
             <TouchableOpacity
               key={route.key}
               accessibilityRole="button"
+              ref={route.name === "carrito" ? cartRef : undefined}
               accessibilityState={isFocused ? { selected: true } : {}}
               onPress={onPress}
               className="flex-1 items-center justify-center"

@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { ThemedText } from "../../components/ThemedText";
 import { FilterBar } from "./components/FilterBar";
+import { FlyingBubble } from "./components/FlyingBubble";
 import { ProductGridCard } from "./components/ProductGridCard";
 import { PromoCarousel } from "./components/PromoCarousel";
 import { SkeletonProductCard } from "./components/SkeletonProductCard";
@@ -96,7 +97,6 @@ export default function CatalogoScreen() {
         onScroll={handleScroll}
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
-        scrollEnabled={!showSpinnerInList}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -129,21 +129,13 @@ export default function CatalogoScreen() {
           />
         </View>
 
-        {!loadingInit && !showSpinnerInList && productos.length === 0 && (
-          <View className="py-20 px-4 items-center">
-            <ThemedText className="text-muted-foreground">
-              No se encontraron productos.
-            </ThemedText>
-          </View>
-        )}
-
         {/* Grid fluido estilo Metasoft con padding restaurado */}
         {loadingInit ? (
           <View
             className="flex-row flex-wrap justify-center px-4"
             style={{ gap: 16 }}
           >
-            {Array.from({ length: 6 }).map((_, i) => (
+            {Array.from({ length: 4 }).map((_, i) => (
               <View
                 key={`skeleton-${i}`}
                 className="flex-1"
@@ -156,6 +148,30 @@ export default function CatalogoScreen() {
             {Array.from({ length: 4 }).map((_, i) => (
               <View
                 key={`phantom-${i}`}
+                className="flex-1"
+                style={{ minWidth: 280, maxWidth: 330, height: 0 }}
+                pointerEvents="none"
+              />
+            ))}
+          </View>
+        ) : applyingFilters && productos.length === 0 ? (
+          <View
+            className="flex-row flex-wrap justify-center px-4"
+            style={{ gap: 16 }}
+          >
+            {Array.from({ length: 4 }).map((_, i) => (
+              <View
+                key={`filter-skeleton-${i}`}
+                className="flex-1"
+                style={{ minWidth: 280, maxWidth: 330 }}
+              >
+                <SkeletonProductCard />
+              </View>
+            ))}
+            {/* Fantasmas para alinear */}
+            {Array.from({ length: 4 }).map((_, i) => (
+              <View
+                key={`phantom-filter-${i}`}
                 className="flex-1"
                 style={{ minWidth: 280, maxWidth: 330, height: 0 }}
                 pointerEvents="none"
@@ -190,13 +206,17 @@ export default function CatalogoScreen() {
                 <View
                   key={`phantom-${i}`}
                   className="flex-1"
-                  style={{ minWidth: minWidth, maxWidth: maxWidth, height: 0 }}
+                  style={{
+                    minWidth: minWidth,
+                    maxWidth: maxWidth,
+                    height: 0,
+                  }}
                   pointerEvents="none"
                 />
               ))}
             </View>
 
-            {loadingProductos && (
+            {(loadingProductos || applyingFilters) && (
               <View className="py-6 items-center">
                 <ActivityIndicator size="large" color="#7C3AED" />
               </View>
@@ -212,6 +232,7 @@ export default function CatalogoScreen() {
           )
         )}
       </ScrollView>
+      <FlyingBubble />
     </View>
   );
 }

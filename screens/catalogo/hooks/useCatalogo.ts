@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { httpClient } from "../../../http/httpClient";
 import {
   CategoriaCatalogo,
@@ -23,7 +23,7 @@ export function useCatalogo() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [categoriaActiva, setCategoriaActiva] = useState<number | null>(null);
-
+  const latestFilterRef = useRef({ searchQuery, categoriaActiva });
   const fetchCategorias = async () => {
     try {
       const res = await httpClient.getAuth<CategoriaCatalogo[]>(
@@ -69,7 +69,12 @@ export function useCatalogo() {
       >(`/api/catalogo?${params.toString()}`, "Error al cargar productos");
 
       const newData = res.data || [];
-
+      if (
+        searchQuery !== latestFilterRef.current.searchQuery ||
+        categoriaActiva !== latestFilterRef.current.categoriaActiva
+      ) {
+        return; // descarta la respuesta
+      }
       if (isRefresh) {
         setProductos(newData);
       } else {
@@ -104,12 +109,13 @@ export function useCatalogo() {
   }, [searchQuery, categoriaActiva]);
 
   // Limpia productos y busca desde página 1 al aplicar filtros
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
+    latestFilterRef.current = { searchQuery, categoriaActiva };
     setApplyingFilters(true);
-    setProductos([]); // limpia inmediatamente para mostrar spinner
+    setProductos([]);
     setPage(1);
     fetchProductos(1, true);
-  };
+  }, [searchQuery, categoriaActiva]); // añade las dependencias
 
   return {
     productos,

@@ -237,20 +237,29 @@ export default function CarritoScreen() {
         </Pressable>
 
         {!user ? (
-          <View className="items-center w-full">
+          // USUARIO NO LOGUEADO
+          <View className="items-center">
             <Ionicons name="person-circle-outline" size={72} color="#8B5CF6" />
             <ThemedText className="text-2xl font-bold mt-4 mb-2 text-center">
-              Inicia sesión
+              Inicia sesión o regístrate
             </ThemedText>
             <ThemedText className="text-muted-foreground text-sm text-center mb-8">
-              Necesitas una cuenta para finalizar.
+              Necesitas una cuenta para finalizar tu pedido.
             </ThemedText>
             <Pressable
               onPress={() => router.push("/login")}
-              className="bg-primary rounded-xl py-4 w-full max-w-xs items-center mb-3 active:scale-95"
+              className="bg-primary rounded-xl py-4 w-72 items-center mb-3 active:scale-95"
             >
-              <ThemedText className="text-primary-foreground font-bold">
+              <ThemedText className="text-primary-foreground font-bold text-base">
                 Iniciar sesión
+              </ThemedText>
+            </Pressable>
+            <Pressable
+              onPress={() => router.push("/register")}
+              className="bg-secondary rounded-xl py-4 w-72 items-center border border-border active:scale-95"
+            >
+              <ThemedText className="text-secondary-foreground font-bold text-base">
+                Registrarse
               </ThemedText>
             </Pressable>
           </View>
