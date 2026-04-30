@@ -41,7 +41,8 @@ export default function AdministracionScreen() {
   const { width } = useWindowDimensions();
 
   const isMobile = width < 700;
-  const isTablet = width >= 700 && width < 1024;
+const isTablet = width >= 700 && width < 1100;
+const isCompact = isMobile || isTablet;
 
   const [search, setSearch] = useState("");
   const [estado, setEstado] = useState("todos");
@@ -139,40 +140,37 @@ export default function AdministracionScreen() {
 
   return (
     <ScrollView className="flex-1 bg-[#fbf7f6]">
-      <View className={isMobile ? "px-4 py-8" : "px-8 py-10"}>
-        <View
-          className={
-            isMobile
-              ? "mb-8 gap-5"
-              : "flex-row justify-between items-start mb-10 gap-6"
-          }
-        >
-          <AdminHeader isMobile={isMobile} />
+      <View className={isCompact ? "px-4 py-8" : "px-8 py-10"}>
+       <View
+  className={
+    isCompact
+      ? "mb-8 gap-5"
+      : "flex-row justify-between items-start mb-10 gap-6"
+  }
+>
+<AdminHeader isMobile={isCompact} />
 
-          <View
-            className={
-              isMobile ? "w-full" : isTablet ? "w-[430px]" : "w-[520px]"
-            }
-          >
-            <AdminSearchBar
-              search={search}
-              setSearch={setSearch}
-              fechaInicio={fechaInicio}
-              setFechaInicio={setFechaInicio}
-              fechaFin={fechaFin}
-              setFechaFin={setFechaFin}
-              isMobile={isMobile}
-            />
+         <View className={isCompact ? "w-full" : "w-[520px]"}>
+           <AdminSearchBar
+  search={search}
+  setSearch={setSearch}
+  fechaInicio={fechaInicio}
+  setFechaInicio={setFechaInicio}
+  fechaFin={fechaFin}
+  setFechaFin={setFechaFin}
+  isMobile={isCompact}
+/>
           </View>
         </View>
 
-        <View className={isMobile ? "gap-4 mb-10" : "flex-row gap-6 mb-12"}>
+        <View className={isCompact ? "gap-4 mb-10" : "flex-row gap-6 mb-12"}>
           <AdminMetricCard
             title="Ventas Totales (Mes)"
             value={`Bs. ${totalMes.toFixed(2)}`}
             subtitle={`${pedidosDelMes.length} pedidos este mes`}
             icon="card-outline"
-            isMobile={isMobile}
+            isMobile={isCompact}
+            
           />
 
           <AdminMetricCard
@@ -180,7 +178,7 @@ export default function AdministracionScreen() {
             value={String(pedidosHoy)}
             subtitle="Pedidos registrados hoy"
             icon="bag-handle-outline"
-            isMobile={isMobile}
+            isMobile={isCompact}
           />
 
           <AdminMetricCard
@@ -188,17 +186,17 @@ export default function AdministracionScreen() {
             value={String(cuentasActivas)}
             subtitle="Clientes con pedidos"
             icon="people-outline"
-            isMobile={isMobile}
+            isMobile={isCompact}
           />
         </View>
 
-        <View
-          className={
-            isMobile
-              ? "gap-4 mb-5"
-              : "flex-row justify-between items-center mb-5"
-          }
-        >
+       <View
+  className={
+    isCompact
+      ? "gap-4 mb-5"
+      : "flex-row justify-between items-center mb-5"
+  }
+>
           <ThemedText className="text-2xl font-bold text-[#050816]">
             Pedidos Recientes
           </ThemedText>
@@ -208,7 +206,7 @@ export default function AdministracionScreen() {
             setEstado={setEstado}
             categoria={categoria}
             setCategoria={setCategoria}
-            isMobile={isMobile}
+            isMobile={isCompact}
           />
         </View>
 
@@ -224,7 +222,7 @@ export default function AdministracionScreen() {
       <PedidoCard
         key={pedido.idPedido}
         pedido={pedido}
-        isMobile={isMobile}
+        isMobile={isCompact}
         onEstadoChange={actualizarEstado}
       />
     ))
