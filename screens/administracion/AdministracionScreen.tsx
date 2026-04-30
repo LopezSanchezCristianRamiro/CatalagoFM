@@ -13,7 +13,6 @@ import AdminMetricCard from "./components/AdminMetricCard";
 import AdminSearchBar from "./components/AdminSearchBar";
 import PedidoCard from "./components/PedidoCard";
 import { usePedidos } from "./hooks/usePedidos";
-
 function parseFechaInput(value: string) {
   if (!value) return null;
 
@@ -49,13 +48,6 @@ export default function AdministracionScreen() {
   const [categoria, setCategoria] = useState("todas");
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
-
-  const hayFiltrosActivos =
-    search.trim() !== "" ||
-    estado !== "todos" ||
-    categoria !== "todas" ||
-    fechaInicio !== "" ||
-    fechaFin !== "";
 
   const pedidosFiltrados = useMemo(() => {
     const inicio = parseFechaInput(fechaInicio);
@@ -220,32 +212,24 @@ export default function AdministracionScreen() {
           />
         </View>
 
-        {!hayFiltrosActivos ? (
-          <View className="mt-6 bg-white rounded-xl p-6 border border-gray-100">
-            <ThemedText className="text-center text-gray-400">
-              Usa los filtros o el buscador para ver pedidos.
-            </ThemedText>
-          </View>
-        ) : (
-          <View className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
-            {pedidosFiltrados.length === 0 ? (
-              <View className="p-6">
-                <ThemedText className="text-center text-gray-500">
-                  No se encontraron resultados.
-                </ThemedText>
-              </View>
-            ) : (
-              pedidosFiltrados.map((pedido) => (
-                <PedidoCard
-                  key={pedido.idPedido}
-                  pedido={pedido}
-                  isMobile={isMobile}
-                  onEstadoChange={actualizarEstado}
-                />
-              ))
-            )}
-          </View>
-        )}
+       <View className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
+  {pedidosFiltrados.length === 0 ? (
+    <View className="p-6">
+      <ThemedText className="text-center text-gray-500">
+        No se encontraron resultados.
+      </ThemedText>
+    </View>
+  ) : (
+    pedidosFiltrados.map((pedido) => (
+      <PedidoCard
+        key={pedido.idPedido}
+        pedido={pedido}
+        isMobile={isMobile}
+        onEstadoChange={actualizarEstado}
+      />
+    ))
+  )}
+</View>
       </View>
     </ScrollView>
   );

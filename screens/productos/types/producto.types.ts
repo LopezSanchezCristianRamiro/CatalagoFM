@@ -16,6 +16,9 @@ export type Producto = {
   precio: number;
   precioDescuento?: number | null;
   idCategoria: number;
+
+  estado?: "activado" | "desactivado";
+
   categoria?: Categoria;
   fotos?: FotoProducto[];
 };
@@ -26,6 +29,9 @@ export type ProductoPayload = {
   precio: number;
   precioDescuento?: number | null;
   idCategoria: number;
+
+  estado?: "activado" | "desactivado";
+
   urlFotos?: string[];
 };
 

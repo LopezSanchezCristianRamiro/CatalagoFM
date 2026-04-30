@@ -1,32 +1,33 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useRef, useState } from "react";
-import { Animated, Image, Pressable, View, useWindowDimensions } from "react-native";
+import React, { useEffect, useRef } from "react";
+import {
+  Animated,
+  Image,
+  Pressable,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { ThemedText } from "../../../components/ThemedText";
 import { Producto } from "../types/producto.types";
+import ProductoEstadoSwitch from "./ProductoEstadoSwitch";
 
 type Props = {
   producto: Producto;
   onEdit: (producto: Producto) => void;
-  onDelete: (id: number) => void;
   onViewImages: (producto: Producto) => void;
+  onChangeEstado: (producto: Producto) => void;
   deleting?: boolean;
-  
 };
 
 export default function ProductoCard({
   producto,
   onEdit,
-  onDelete,
   onViewImages,
+  onChangeEstado,
   deleting = false,
 }: Props) {
   const { width } = useWindowDimensions();
   const isMobile = width < 700;
-
-  const [eliminando, setEliminando] = useState(false);
-
-  const iconScale = useRef(new Animated.Value(1)).current;
-  const iconRotate = useRef(new Animated.Value(0)).current;
 
   const cardScale = useRef(new Animated.Value(1)).current;
   const cardOpacity = useRef(new Animated.Value(1)).current;
@@ -34,11 +35,7 @@ export default function ProductoCard({
 
   const fotos = producto.fotos ?? [];
   const fotoPrincipal = fotos[0]?.urlFoto;
-
-  const rotateDeg = iconRotate.interpolate({
-    inputRange: [-1, 0, 1],
-    outputRange: ["-12deg", "0deg", "12deg"],
-  });
+  const estaActivado = producto.estado === "activado";
 
   useEffect(() => {
     if (deleting) {
@@ -66,55 +63,15 @@ export default function ProductoCard({
     }
   }, [deleting, cardScale, cardOpacity, cardTranslateY]);
 
- const handleDelete = () => {
-  if (eliminando || deleting) return;
-
-  setEliminando(true);
-
-  Animated.sequence([
-    Animated.parallel([
-      Animated.timing(iconScale, {
-        toValue: 1.25,
-        duration: 120,
-        useNativeDriver: true,
-      }),
-      Animated.timing(iconRotate, {
-        toValue: 1,
-        duration: 120,
-        useNativeDriver: true,
-      }),
-    ]),
-    Animated.parallel([
-      Animated.timing(iconScale, {
-        toValue: 0.85,
-        duration: 120,
-        useNativeDriver: true,
-      }),
-      Animated.timing(iconRotate, {
-        toValue: -1,
-        duration: 120,
-        useNativeDriver: true,
-      }),
-    ]),
-    Animated.timing(iconScale, {
-      toValue: 1,
-      duration: 100,
-      useNativeDriver: true,
-    }),
-  ]).start(() => {
-    iconRotate.setValue(0);
-    setEliminando(false);
-    onDelete(producto.idProducto);
-  });
-};
-
   return (
     <Animated.View
       style={{
         opacity: cardOpacity,
         transform: [{ scale: cardScale }, { translateY: cardTranslateY }],
       }}
-      className="bg-white rounded-2xl p-4 shadow-sm"
+      className={`bg-white rounded-2xl p-4 shadow-sm border ${
+        estaActivado ? "border-slate-100" : "border-red-100 opacity-70"
+      }`}
     >
       <View className="flex-row items-center">
         <View className="w-16 h-16 rounded-xl bg-slate-900 overflow-hidden mr-4 items-center justify-center">
@@ -131,9 +88,25 @@ export default function ProductoCard({
         </View>
 
         <View className="flex-1 pr-2">
-          <ThemedText className="text-slate-950 font-semibold">
-            {producto.nombre}
-          </ThemedText>
+          <View className="flex-row items-center gap-2">
+            <ThemedText className="text-slate-950 font-semibold">
+              {producto.nombre}
+            </ThemedText>
+
+            <View
+              className={`px-2 py-1 rounded-full ${
+                estaActivado ? "bg-green-100" : "bg-red-100"
+              }`}
+            >
+              <ThemedText
+                className={`text-[10px] font-bold ${
+                  estaActivado ? "text-green-700" : "text-red-700"
+                }`}
+              >
+                {estaActivado ? "Activado" : "Desactivado"}
+              </ThemedText>
+            </View>
+          </View>
 
           <ThemedText className="text-slate-400 text-xs">
             {producto.categoria?.nombre ?? "Sin categoría"}
@@ -150,11 +123,13 @@ export default function ProductoCard({
           )}
         </View>
 
-        <View className={`flex-row ${isMobile ? "gap-3" : "gap-4"}`}>
+        <View className={`flex-row items-center ${isMobile ? "gap-3" : "gap-4"}`}>
           <Pressable
             onPress={() => onEdit(producto)}
             disabled={deleting}
-            className={`${isMobile ? "w-12 h-12" : "w-11 h-11"} bg-slate-100 rounded-xl items-center justify-center`}
+            className={`${
+              isMobile ? "w-12 h-12" : "w-11 h-11"
+            } bg-slate-100 rounded-xl items-center justify-center`}
           >
             <Ionicons name="pencil" size={18} color="#111827" />
           </Pressable>
@@ -162,24 +137,17 @@ export default function ProductoCard({
           <Pressable
             onPress={() => onViewImages(producto)}
             disabled={deleting}
-            className={`${isMobile ? "w-12 h-12" : "w-11 h-11"} bg-purple-50 rounded-xl items-center justify-center`}
+            className={`${
+              isMobile ? "w-12 h-12" : "w-11 h-11"
+            } bg-purple-50 rounded-xl items-center justify-center`}
           >
             <Ionicons name="images-outline" size={19} color="#7e22ce" />
           </Pressable>
 
-          <Pressable
-            onPress={handleDelete}
-            disabled={eliminando || deleting}
-            className={`${isMobile ? "w-12 h-12" : "w-11 h-11"} bg-red-50 rounded-xl items-center justify-center`}
-          >
-            <Animated.View
-              style={{
-                transform: [{ scale: iconScale }, { rotate: rotateDeg }],
-              }}
-            >
-              <Ionicons name="trash-outline" size={18} color="#dc2626" />
-            </Animated.View>
-          </Pressable>
+          <ProductoEstadoSwitch
+            estado={producto.estado}
+            onPress={() => onChangeEstado(producto)}
+          />
         </View>
       </View>
     </Animated.View>
