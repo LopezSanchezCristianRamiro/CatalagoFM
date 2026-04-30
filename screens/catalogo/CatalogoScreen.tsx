@@ -147,7 +147,7 @@ export default function CatalogoScreen() {
           <>
             <View
               className="flex-row flex-wrap justify-center px-4"
-              style={{ gap: 8 }}
+              style={{ gap: 16 }}
             >
               {productos.map((item) => (
                 <View

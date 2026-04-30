@@ -35,13 +35,14 @@ export default function RegisterScreen() {
       !nombre.trim() ||
       !nombreUsuario.trim() ||
       !correo.trim() ||
+      !telefono.trim() ||
       !password ||
       !passwordConfirmation
     ) {
       Toast.show({
         type: "error",
         text1: "Campos requeridos",
-        text2: "Completa todos los campos obligatorios",
+        text2: "Todos los campos son obligatorios.",
       });
       return;
     }
@@ -49,7 +50,7 @@ export default function RegisterScreen() {
       Toast.show({
         type: "error",
         text1: "Correo inválido",
-        text2: "Ingresa un formato de correo válido (ej: usuario@dominio.com)",
+        text2: "Ingresa un formato de correo válido.",
       });
       return;
     }
@@ -57,7 +58,7 @@ export default function RegisterScreen() {
       Toast.show({
         type: "error",
         text1: "Contraseña muy corta",
-        text2: "La contraseña debe tener al menos 6 caracteres",
+        text2: "Mínimo 6 caracteres.",
       });
       return;
     }
@@ -65,7 +66,7 @@ export default function RegisterScreen() {
       Toast.show({
         type: "error",
         text1: "Contraseñas no coinciden",
-        text2: "Ambas contraseñas deben ser iguales",
+        text2: "Ambas deben ser iguales.",
       });
       return;
     }
@@ -82,7 +83,7 @@ export default function RegisterScreen() {
           nombreUsuario: nombreUsuario.trim(),
           correo: correo.trim(),
           password,
-          telefono: telefono.trim() || null,
+          telefono: telefono.trim(),
         },
         "Error al registrarse",
       );
@@ -91,7 +92,7 @@ export default function RegisterScreen() {
       Toast.show({
         type: "success",
         text1: "Registro exitoso",
-        text2: `Bienvenido/a ${response.user.nombre}`,
+        text2: `Bienvenido/a ${nombre}`,
       });
       router.replace("/(tabs)/catalogo");
     } catch (error: any) {
@@ -184,10 +185,7 @@ export default function RegisterScreen() {
             {/* Teléfono (nuevo) */}
             <View className="mb-5">
               <ThemedText className="text-sm font-medium mb-2">
-                Teléfono{" "}
-                <ThemedText className="text-muted-foreground">
-                  (opcional)
-                </ThemedText>
+                Teléfono
               </ThemedText>
               <TextInput
                 className="w-full h-12 bg-white border border-border rounded-lg px-4 text-foreground"

@@ -1,190 +1,104 @@
-import { LinearGradient } from "expo-linear-gradient"; // Asegúrate de tenerlo instalado
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
-import {
-  Image,
-  LayoutChangeEvent,
-  Platform,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Image, Platform, StyleSheet, TouchableOpacity, View } from "react-native";
 import Carousel from "react-native-reanimated-carousel";
 import { ThemedText } from "../../../components/ThemedText";
 import { ProductoCatalogo } from "../types/catalogo.types";
 
-interface PromoCarouselProps {
-  promociones: ProductoCatalogo[];
-  onPressPromo: (producto: ProductoCatalogo) => void;
-}
-
-// ... (mismos imports)
-
-const CAROUSEL_HEIGHT_MOBILE = 520;
-const CAROUSEL_HEIGHT_DESKTOP = 500; // Reducido de 650 para que no sea tan invasivo
-
-export function PromoCarousel({
-  promociones,
-  onPressPromo,
-}: PromoCarouselProps) {
+export function PromoCarousel({ promociones, onPressPromo }: { promociones: ProductoCatalogo[], onPressPromo: (p: ProductoCatalogo) => void }) {
   const [containerWidth, setContainerWidth] = useState(0);
-  const isWeb = Platform.OS === "web";
-  const isDesktop = isWeb && containerWidth >= 1024;
-
-  const onLayout = (e: LayoutChangeEvent) => {
-    const w = e.nativeEvent.layout.width;
-    if (w > 0) setContainerWidth(w);
-  };
+  const isDesktop = Platform.OS === "web" && containerWidth >= 1024;
+  
+  // Ajustamos la altura para que no sea tan gigante y "coma" espacio
+  const carouselHeight = isDesktop ? 450 : 480; 
 
   if (!promociones || promociones.length === 0) return null;
 
-  const carouselHeight = isDesktop
-    ? CAROUSEL_HEIGHT_DESKTOP
-    : CAROUSEL_HEIGHT_MOBILE;
-
-  // El ancho del item sigue siendo el 82%, pero ahora lo centraremos
-  const itemWidth = isDesktop ? containerWidth * 0.82 : containerWidth;
-
   return (
-    <View onLayout={onLayout} style={{ width: "100%" }}>
+    <View 
+      onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)} 
+      style={{ width: "100%", marginBottom: -10 }} // Margen negativo suave para acercar el siguiente contenido
+    >
       {containerWidth > 0 && (
-        <View
-          style={{
-            width: containerWidth,
-            height: carouselHeight,
-            alignItems: "center", // CRÍTICO: Centra el carrusel horizontalmente
-            justifyContent: "center",
-          }}
-        >
-          <Carousel
-            loop={promociones.length > 1}
-            autoPlay={promociones.length > 1}
-            autoPlayInterval={4500}
-            scrollAnimationDuration={1000}
-            data={promociones}
-            width={itemWidth} // El ancho de la "celda" es el del item
-            height={carouselHeight}
-            style={{
-              width: containerWidth, // El área táctil/visual total
-              height: carouselHeight,
-              justifyContent: "center",
-            }}
-            mode={isDesktop ? "parallax" : undefined}
-            modeConfig={
-              isDesktop
-                ? {
-                    parallaxScrollingScale: 0.97,
-                    parallaxScrollingOffset: 200, // Ajustado para que no se desplace tanto
-                    parallaxAdjacentItemScale: 0.9,
-                  }
-                : undefined
-            }
-            renderItem={({ item }) => (
-              <PromoSlide
-                item={item}
-                onPress={onPressPromo}
-                height={carouselHeight}
-                isDesktop={isDesktop}
+        <Carousel
+          loop autoPlay autoPlayInterval={5000}
+          data={promociones}
+          width={containerWidth}
+          height={carouselHeight}
+          // Quitamos el modo parallax en móvil si causa espacios raros
+          mode={isDesktop ? "parallax" : undefined}
+          modeConfig={{ parallaxScrollingScale: 0.95, parallaxScrollingOffset: 80 }}
+          renderItem={({ item }) => (
+            <View style={{ 
+              width: containerWidth, 
+              height: carouselHeight, 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              paddingVertical: 10 
+            }}>
+              <PromoSlide 
+                item={item} 
+                onPress={onPressPromo} 
+                height={carouselHeight - 20} // Solo restamos lo del padding
+                width={isDesktop ? containerWidth * 0.85 : containerWidth * 0.92}
               />
-            )}
-          />
-        </View>
+            </View>
+          )}
+        />
       )}
     </View>
   );
 }
 
-interface PromoSlideProps {
-  item: ProductoCatalogo;
-  onPress: (p: ProductoCatalogo) => void;
-  height: number;
-  isDesktop: boolean;
-}
-
-function PromoSlide({ item, onPress, height, isDesktop }: PromoSlideProps) {
-  const imageUrl =
-    item.fotos && item.fotos.length > 0 ? item.fotos[0].urlFoto : null;
+function PromoSlide({ item, onPress, height, width }: any) {
+  const imageUrl = item.fotos?.[0]?.urlFoto;
 
   return (
     <TouchableOpacity
-      activeOpacity={0.95}
+      activeOpacity={0.9}
       onPress={() => onPress(item)}
-      // En desktop le damos un poco de redondeo para que el parallax luzca más
       style={{
-        height,
-        width: "100%",
-        borderRadius: isDesktop ? 32 : 0,
+        height, width,
+        borderRadius: 32,
         overflow: "hidden",
+        backgroundColor: '#18181b',
+        // Sombras optimizadas para que no empujen el layout
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 6,
       }}
     >
-      {imageUrl ? (
-        <Image
-          source={{ uri: imageUrl }}
-          style={{
-            position: "absolute",
-            height: "100%",
-            width: "100%",
-            backgroundColor: "#020617",
-          }}
-          resizeMode="cover"
-        />
-      ) : (
-        <View
-          style={{ position: "absolute", height: "100%", width: "100%" }}
-          className="bg-zinc-900 items-center justify-center"
-        />
-      )}
-
-      {/* GRADIENTE SUAVE CON EXPO-LINEAR-GRADIENT */}
+      {imageUrl && <Image source={{ uri: imageUrl }} style={StyleSheet.absoluteFill} resizeMode="cover" />}
+      
       <LinearGradient
-        // Comienza transparente y termina en un negro profundo
-        colors={["transparent", "rgba(0,0,0,0.4)", "rgba(0,0,0,0.95)"]}
-        locations={[0.3, 0.6, 0.9]} // Controla dónde empieza a oscurecerse
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: 0,
-          height: "100%", // Cubre todo para un efecto cinematográfico
-        }}
+        colors={["transparent", "rgba(0,0,0,0.3)", "rgba(0,0,0,0.9)"]}
+        locations={[0, 0.4, 1]}
+        style={StyleSheet.absoluteFill}
       />
 
-      <View
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          width: "100%",
-          padding: isDesktop ? 48 : 24, // Más espacio en desktop
-          paddingBottom: isDesktop ? 60 : 40,
-        }}
-      >
-        <View
-          style={{ marginBottom: 16, alignSelf: "flex-start" }}
-          className="rounded-full bg-primary/90 px-4 py-2"
-        >
-          <ThemedText className="text-xs font-bold uppercase tracking-widest text-primary-foreground">
-            Sugerencia para ti
-          </ThemedText>
+      <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: 25 }}>
+        <View className="bg-white/20 self-start px-3 py-1 rounded-full backdrop-blur-md mb-2 border border-white/20">
+          <ThemedText className="text-[8px] font-bold text-white uppercase tracking-widest">Sugerencia</ThemedText>
         </View>
 
-        <ThemedText
-          className={`font-black text-white tracking-tighter ${
-            isDesktop ? "text-6xl mb-4" : "text-4xl mb-2"
-          }`}
-          numberOfLines={2}
+        <ThemedText 
+          className="font-black text-white text-3xl mb-2" 
+          style={{ textShadowColor: 'black', textShadowRadius: 8 }}
+          numberOfLines={1} // Evitamos que ocupe muchas líneas y crezca hacia abajo
         >
           {item.nombre}
         </ThemedText>
 
-        {item.descripcion && (
-          <ThemedText
-            className={`text-gray-300 font-medium ${
-              isDesktop ? "text-xl max-w-2xl" : "text-lg"
-            }`}
-            numberOfLines={isDesktop ? 3 : 2}
-          >
-            {item.descripcion}
-          </ThemedText>
-        )}
+        <View className="flex-row items-center mt-2">
+          <View className="bg-white px-5 py-2 rounded-full shadow-lg flex-row items-center">
+            <Ionicons name="play-circle" size={16} color="black" style={{ marginRight: 6 }} />
+            <ThemedText className="text-black font-bold text-[11px]">Ver detalles</ThemedText>
+          </View>
+          <ThemedText className="ml-4 text-white font-bold text-lg">Bs {item.precio}</ThemedText>
+        </View>
       </View>
     </TouchableOpacity>
   );

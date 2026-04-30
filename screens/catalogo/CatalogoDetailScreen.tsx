@@ -7,19 +7,19 @@ import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    ScrollView,
-    TouchableOpacity,
-    View,
-    useWindowDimensions,
+  ActivityIndicator,
+  ScrollView,
+  TouchableOpacity,
+  View,
+  useWindowDimensions,
 } from "react-native";
 import Animated, {
-    FadeIn,
-    FadeInDown,
-    FadeInUp,
-    useAnimatedStyle,
-    useSharedValue,
-    withSpring,
+  FadeIn,
+  FadeInDown,
+  FadeInUp,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
 } from "react-native-reanimated";
 import Carousel, { ICarouselInstance } from "react-native-reanimated-carousel";
 import Toast from "react-native-toast-message";
@@ -283,8 +283,8 @@ export default function CatalogoDetailScreen() {
     addToCart(producto as any);
     Toast.show({
       type: "success",
-      text1: "Añadido al carrito",
-      text2: `${producto.nombre} ha sido agregado.`,
+      text1: "Revisa tu carrito",
+      text2: `${producto.nombre} ha sido agregado al carrito.`,
     });
     router.back();
   }, [producto, addToCart, cartBtnScale]);

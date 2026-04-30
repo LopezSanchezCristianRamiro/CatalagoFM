@@ -188,6 +188,9 @@ export default function CarritoScreen() {
               updateCantidad(item.idProducto, item.cantidad - 1)
             }
             onEliminar={() => removeFromCart(item.idProducto)}
+            onUpdateCantidad={(cantidad) =>
+              updateCantidad(item.idProducto, cantidad)
+            }
           />
         ))}
       </ScrollView>
