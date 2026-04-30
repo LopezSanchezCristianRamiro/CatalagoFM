@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -19,38 +19,38 @@ import SearchBar from "./components/SearchBar";
 import { useProductos } from "./hooks/useProductos";
 import { productoService } from "./services/productoService";
 import { Categoria, Producto } from "./types/producto.types";
+
 export default function ProductosScreen() {
   const { productos, categorias, loading, refetch } = useProductos();
   const { width } = useWindowDimensions();
 
   const isMobile = width < 700;
+
   const [categoriaBloqueada, setCategoriaBloqueada] =
     useState<Categoria | null>(null);
   const [productosCategoriaBloqueada, setProductosCategoriaBloqueada] =
     useState<Producto[]>([]);
+
   const [tab, setTab] = useState<"productos" | "categorias">("productos");
   const [busqueda, setBusqueda] = useState("");
 
   const [modalProducto, setModalProducto] = useState(false);
   const [productoImagenes, setProductoImagenes] = useState<Producto | null>(
-    null,
+    null
   );
   const [productoEditando, setProductoEditando] = useState<Producto | null>(
-    null,
+    null
   );
+
   const [categoriaEditando, setCategoriaEditando] = useState<Categoria | null>(
-    null,
+    null
   );
-  const [categoriaAnimandoBoton, setCategoriaAnimandoBoton] = useState<
-    number | null
-  >(null);
-  const [productoEliminar, setProductoEliminar] = useState<number | null>(null);
-  const [productoAnimandoEliminar, setProductoAnimandoEliminar] = useState<
-    number | null
-  >(null);
+
+  const [productoEstado, setProductoEstado] = useState<Producto | null>(null);
+  const [cambiandoEstado, setCambiandoEstado] = useState(false);
 
   const [categoriaEliminar, setCategoriaEliminar] = useState<number | null>(
-    null,
+    null
   );
   const [categoriaAnimandoEliminar, setCategoriaAnimandoEliminar] = useState<
     number | null
@@ -61,11 +61,11 @@ export default function ProductosScreen() {
   const productosFiltrados = productos.filter((p) =>
     `${p.nombre} ${p.descripcion ?? ""} ${p.categoria?.nombre ?? ""}`
       .toLowerCase()
-      .includes(busqueda.toLowerCase()),
+      .includes(busqueda.toLowerCase())
   );
 
   const categoriasFiltradas = categorias.filter((cat) =>
-    cat.nombre.toLowerCase().includes(busqueda.toLowerCase()),
+    cat.nombre.toLowerCase().includes(busqueda.toLowerCase())
   );
 
   const abrirNuevoProducto = () => {
@@ -93,38 +93,46 @@ export default function ProductosScreen() {
     setTab("categorias");
   };
 
-  const confirmarEliminarProducto = (id: number) => {
-    setProductoEliminar(id);
+  const confirmarCambiarEstadoProducto = (producto: Producto) => {
+    setProductoEstado(producto);
   };
 
-  const eliminarProducto = async () => {
-    if (!productoEliminar) return;
+  const cambiarEstadoProducto = async () => {
+    if (!productoEstado) return;
 
     try {
-      setEliminando(true);
-      setProductoAnimandoEliminar(productoEliminar);
-      setProductoEliminar(null);
+      setCambiandoEstado(true);
 
-      setTimeout(async () => {
-        await productoService.deleteProducto(productoEliminar);
+      const nuevoEstado =
+        productoEstado.estado === "activado" ? "desactivado" : "activado";
 
-        Toast.show({
-          type: "success",
-          text1: "Producto eliminado",
-        });
-
-        await refetch();
-        setProductoAnimandoEliminar(null);
-        setEliminando(false);
-      }, 450);
-    } catch {
-      Toast.show({
-        type: "error",
-        text1: "No se pudo eliminar el producto",
+      await productoService.updateProducto(productoEstado.idProducto, {
+        nombre: productoEstado.nombre,
+        descripcion: productoEstado.descripcion ?? "",
+        precio: Number(productoEstado.precio),
+        precioDescuento: productoEstado.precioDescuento ?? null,
+        idCategoria: productoEstado.idCategoria,
+        estado: nuevoEstado,
+        urlFotos: productoEstado.fotos?.map((foto) => foto.urlFoto) ?? [],
       });
 
-      setProductoAnimandoEliminar(null);
-      setEliminando(false);
+      Toast.show({
+        type: "success",
+        text1:
+          nuevoEstado === "activado"
+            ? "Producto activado"
+            : "Producto desactivado",
+      });
+
+      setProductoEstado(null);
+      await refetch();
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: "No se pudo cambiar el estado",
+      });
+    } finally {
+      setCambiandoEstado(false);
     }
   };
 
@@ -132,7 +140,7 @@ export default function ProductosScreen() {
     const categoria = categorias.find((cat) => cat.idCategoria === id);
 
     const productosAsociados = productos.filter(
-      (producto) => producto.idCategoria === id,
+      (producto) => producto.idCategoria === id
     );
 
     if (productosAsociados.length > 0) {
@@ -256,10 +264,9 @@ export default function ProductosScreen() {
                   renderItem={({ item }) => (
                     <ProductoCard
                       producto={item}
-                      onEdit={editarProducto}
-                      onDelete={confirmarEliminarProducto}
-                      onViewImages={setProductoImagenes}
-                      deleting={productoAnimandoEliminar === item.idProducto}
+  onEdit={editarProducto}
+  onViewImages={setProductoImagenes}
+  onChangeEstado={confirmarCambiarEstadoProducto}
                     />
                   )}
                 />
@@ -380,31 +387,49 @@ export default function ProductosScreen() {
         </Pressable>
       </View>
 
-      <Modal
-        visible={productoEliminar !== null}
-        transparent
-        animationType="fade"
-      >
+      <Modal visible={productoEstado !== null} transparent animationType="fade">
         <View className="flex-1 bg-black/40 items-center justify-center px-6">
           <View className="bg-white w-full max-w-[420px] rounded-3xl p-6">
             <View className="items-center mb-4">
-              <View className="w-16 h-16 rounded-full bg-red-50 items-center justify-center">
-                <Ionicons name="trash-outline" size={30} color="#dc2626" />
+              <View
+                className={`w-16 h-16 rounded-full items-center justify-center ${
+                  productoEstado?.estado === "activado"
+                    ? "bg-red-50"
+                    : "bg-green-50"
+                }`}
+              >
+                <Ionicons
+                  name={
+                    productoEstado?.estado === "activado"
+                      ? "power-outline"
+                      : "checkmark-circle-outline"
+                  }
+                  size={32}
+                  color={
+                    productoEstado?.estado === "activado"
+                      ? "#dc2626"
+                      : "#16a34a"
+                  }
+                />
               </View>
             </View>
 
             <ThemedText className="text-slate-950 text-xl font-bold text-center">
-              Eliminar producto
+              {productoEstado?.estado === "activado"
+                ? "Desactivar producto"
+                : "Activar producto"}
             </ThemedText>
 
             <ThemedText className="text-slate-500 text-center mt-2">
-              Esta acción no se puede deshacer.
+              {productoEstado?.estado === "activado"
+                ? "Este producto dejará de mostrarse en el catálogo público."
+                : "Este producto volverá a mostrarse en el catálogo público."}
             </ThemedText>
 
             <View className="flex-row gap-3 mt-6">
               <Pressable
-                onPress={() => setProductoEliminar(null)}
-                disabled={eliminando}
+                onPress={() => setProductoEstado(null)}
+                disabled={cambiandoEstado}
                 className="flex-1 bg-slate-100 rounded-2xl py-4"
               >
                 <ThemedText className="text-center font-bold">
@@ -413,15 +438,19 @@ export default function ProductosScreen() {
               </Pressable>
 
               <Pressable
-                onPress={eliminarProducto}
-                disabled={eliminando}
-                className="flex-1 bg-red-600 rounded-2xl py-4 items-center"
+                onPress={cambiarEstadoProducto}
+                disabled={cambiandoEstado}
+                className={`flex-1 rounded-2xl py-4 items-center ${
+                  productoEstado?.estado === "activado"
+                    ? "bg-red-600"
+                    : "bg-green-600"
+                }`}
               >
-                {eliminando ? (
+                {cambiandoEstado ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
                   <ThemedText className="text-white font-bold">
-                    Eliminar
+                    Confirmar
                   </ThemedText>
                 )}
               </Pressable>
@@ -533,6 +562,7 @@ export default function ProductosScreen() {
           </View>
         </View>
       </Modal>
+
       <Modal
         visible={categoriaBloqueada !== null}
         transparent
@@ -600,11 +630,13 @@ export default function ProductosScreen() {
           </View>
         </View>
       </Modal>
+
       <ProductoImagenesModal
         visible={productoImagenes !== null}
         producto={productoImagenes}
         onClose={() => setProductoImagenes(null)}
       />
+
       <ProductoModal
         visible={modalProducto}
         categorias={categorias}
