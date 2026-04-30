@@ -1,6 +1,6 @@
+// http/httpClient.ts
 import { getToken } from "../storage/secureStorage";
 
-// Usa la URL del .env o fallback a localhost
 export const BASE_URL =
   process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -11,7 +11,12 @@ async function parseErrorMessage(
   const text = await res.text().catch(() => "");
   try {
     const json = JSON.parse(text);
-    return json.message || json.error || fallback;
+    if (json.message) return json.message;
+    if (json.error) return json.error;
+    if (json.errors) {
+      return "Algunos datos ya se encuentran registrados o son inválidos.";
+    }
+    return fallback;
   } catch {
     return text || fallback;
   }
@@ -32,10 +37,18 @@ async function request<T>(
     if (token) headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${BASE_URL}${path}`, {
-    ...options,
-    headers: { ...headers, ...options.headers },
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${BASE_URL}${path}`, {
+      ...options,
+      headers: { ...headers, ...options.headers },
+    });
+  } catch (networkError: any) {
+    throw {
+      status: 0,
+      message: "No se pudo conectar al servidor. Revisa tu conexión.",
+    };
+  }
 
   if (!res.ok) {
     const message = await parseErrorMessage(res, fallback);
