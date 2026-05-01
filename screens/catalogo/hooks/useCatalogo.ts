@@ -44,7 +44,7 @@ export function useCatalogo() {
   const fetchPromociones = async () => {
     try {
       const res = await httpClient.getAuth<PaginatedResponseCatalogo<ProductoCatalogo>>(
-        "/api/catalogo?soloPromociones=1&all=1",
+        "/api/catalogo?soloPromociones=1&limit=1000",
         "Error al cargar promociones",
       );
       setPromociones(res.data || []);
