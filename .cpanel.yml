@@ -1,5 +1,10 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/ecoguz/catalogo.ecoguz.com/
+    - export DEPLOYPATH=/home/met4s0ft3/catalogo.metasoft-bolivia.com
+    # 1. Borrar todo el directorio público EXCEPTO .htaccess y la carpeta api
+    - find $DEPLOYPATH -mindepth 1 -not \( -name ".htaccess" -o -name "api" \) -exec rm -rf {} \; 2>/dev/null || true
+    # 2. Copiar los nuevos archivos compilados
     - /bin/cp -R dist/* $DEPLOYPATH
+    # 3. Permisos
+    - chmod -R 755 $DEPLOYPATH
