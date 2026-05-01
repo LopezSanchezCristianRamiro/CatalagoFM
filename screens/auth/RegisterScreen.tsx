@@ -189,7 +189,7 @@ export default function RegisterScreen() {
               </ThemedText>
               <TextInput
                 className="w-full h-12 bg-white border border-border rounded-lg px-4 text-foreground"
-                placeholder="7xx xxxxx"
+                placeholder="7xxxxxxx"
                 placeholderTextColor="#A1A1AA"
                 keyboardType="phone-pad"
                 value={telefono}

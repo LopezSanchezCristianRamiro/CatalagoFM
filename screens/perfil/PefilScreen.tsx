@@ -143,7 +143,7 @@ export default function PerfilScreen() {
           <ThemedText className="text-xl">No has iniciado sesión</ThemedText>
           <TouchableOpacity
             className="mt-4 h-12 bg-primary rounded-lg items-center justify-center px-6"
-            onPress={() => router.replace("/login")}
+            onPress={() => router.push("/login")}
           >
             <ThemedText className="text-primary-foreground text-base font-semibold">
               Iniciar Sesión

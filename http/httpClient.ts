@@ -31,6 +31,7 @@ async function request<T>(
 ): Promise<T> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
+    "Accept": "application/json",  
   };
 
   if (authenticated) {
@@ -45,6 +46,8 @@ async function request<T>(
       headers: { ...headers, ...options.headers },
     });
   } catch (networkError: any) {
+        if (networkError?.name === "AbortError") throw networkError;
+
     Toast.show({
       type: "error",
       text1: "Sin conexión",
@@ -75,8 +78,8 @@ export const httpClient = {
       fallback,
     ),
 
-  getAuth: <T>(path: string, fallback = "Error al cargar datos") =>
-    request<T>(path, { method: "GET" }, true, fallback),
+  getAuth: <T>(path: string, fallback = "Error al cargar datos", signal?: AbortSignal) =>
+    request<T>(path, { method: "GET", signal }, true, fallback),
 
   postAuth: <T>(
     path: string,

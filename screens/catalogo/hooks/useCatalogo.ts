@@ -10,20 +10,25 @@ export function useCatalogo() {
   const [productos, setProductos] = useState<ProductoCatalogo[]>([]);
   const [promociones, setPromociones] = useState<ProductoCatalogo[]>([]);
   const [categorias, setCategorias] = useState<CategoriaCatalogo[]>([]);
-
   const [loadingProductos, setLoadingProductos] = useState(false);
   const [loadingInit, setLoadingInit] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-
-  // nuevo estado para saber si estamos filtrando (buscar/categoría)
   const [applyingFilters, setApplyingFilters] = useState(false);
-
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-
   const [searchQuery, setSearchQuery] = useState("");
   const [categoriaActiva, setCategoriaActiva] = useState<number | null>(null);
-  const latestFilterRef = useRef({ searchQuery, categoriaActiva });
+
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const filtersRef = useRef<{ searchQuery: string; categoriaActiva: number | null }>({
+    searchQuery: "",
+    categoriaActiva: null,
+  });
+  const pageRef = useRef(1);
+
+  // Mantén filtersRef sincronizado en cada render
+  filtersRef.current = { searchQuery, categoriaActiva };
+
   const fetchCategorias = async () => {
     try {
       const res = await httpClient.getAuth<CategoriaCatalogo[]>(
@@ -38,9 +43,7 @@ export function useCatalogo() {
 
   const fetchPromociones = async () => {
     try {
-      const res = await httpClient.getAuth<
-        PaginatedResponseCatalogo<ProductoCatalogo>
-      >(
+      const res = await httpClient.getAuth<PaginatedResponseCatalogo<ProductoCatalogo>>(
         "/api/catalogo?soloPromociones=1&limit=5",
         "Error al cargar promociones",
       );
@@ -50,31 +53,37 @@ export function useCatalogo() {
     }
   };
 
-  const fetchProductos = async (currentPage: number, isRefresh = false) => {
-    if (loadingProductos) return;
+  const fetchProductos = useCallback(async (currentPage: number, isRefresh = false) => {
+    // Cancela el request anterior
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setLoadingProductos(true);
+
+    const { searchQuery: sq, categoriaActiva: ca } = filtersRef.current;
 
     try {
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: "15",
       });
+      if (sq) params.append("search", sq);
+      if (ca !== null) params.append("idCategoria", ca.toString());
 
-      if (searchQuery) params.append("search", searchQuery);
-      if (categoriaActiva)
-        params.append("idCategoria", categoriaActiva.toString());
+      const res = await httpClient.getAuth<PaginatedResponseCatalogo<ProductoCatalogo>>(
+        `/api/catalogo?${params.toString()}`,
+        "Error al cargar productos",
+        controller.signal, // <-- signal para cancelar a nivel de red
+      );
 
-      const res = await httpClient.getAuth<
-        PaginatedResponseCatalogo<ProductoCatalogo>
-      >(`/api/catalogo?${params.toString()}`, "Error al cargar productos");
+      // Si fue abortado mientras esperaba, descartamos
+      if (controller.signal.aborted) return;
 
       const newData = res.data || [];
-      if (
-        searchQuery !== latestFilterRef.current.searchQuery ||
-        categoriaActiva !== latestFilterRef.current.categoriaActiva
-      ) {
-        return; // descarta la respuesta
-      }
+
       if (isRefresh) {
         setProductos(newData);
       } else {
@@ -82,40 +91,44 @@ export function useCatalogo() {
       }
 
       setHasMore(currentPage < res.last_page);
-    } catch (error) {
+      pageRef.current = currentPage;
+    } catch (error: any) {
+      if (error?.name === "AbortError") return;
       console.error(error);
     } finally {
-      setLoadingProductos(false);
-      setLoadingInit(false);
-      setRefreshing(false);
-      setApplyingFilters(false);
+      // Solo toca el estado si este controller sigue siendo el activo
+      if (abortControllerRef.current === controller) {
+        setLoadingProductos(false);
+        setLoadingInit(false);
+        setRefreshing(false);
+        setApplyingFilters(false);
+      }
     }
-  };
+  }, []);
 
-  const loadMore = () => {
+  const loadMore = useCallback(() => {
     if (!loadingProductos && hasMore) {
-      const nextPage = page + 1;
-      setPage(nextPage);
-      fetchProductos(nextPage);
+      const nextPage = pageRef.current + 1;
+      fetchProductos(nextPage, false);
     }
-  };
+  }, [loadingProductos, hasMore, fetchProductos]);
 
   const refreshAll = useCallback(() => {
     setRefreshing(true);
+    pageRef.current = 1;
     setPage(1);
     fetchCategorias();
     fetchPromociones();
     fetchProductos(1, true);
-  }, [searchQuery, categoriaActiva]);
+  }, [fetchProductos]);
 
-  // Limpia productos y busca desde página 1 al aplicar filtros
   const applyFilters = useCallback(() => {
-    latestFilterRef.current = { searchQuery, categoriaActiva };
     setApplyingFilters(true);
     setProductos([]);
+    pageRef.current = 1;
     setPage(1);
     fetchProductos(1, true);
-  }, [searchQuery, categoriaActiva]); // añade las dependencias
+  }, [fetchProductos]);
 
   return {
     productos,
@@ -124,7 +137,7 @@ export function useCatalogo() {
     loadingInit,
     loadingProductos,
     refreshing,
-    applyingFilters, // nuevo
+    applyingFilters,
     searchQuery,
     setSearchQuery,
     categoriaActiva,
