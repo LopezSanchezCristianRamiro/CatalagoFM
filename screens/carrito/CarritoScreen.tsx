@@ -312,7 +312,7 @@ export default function CarritoScreen() {
         >
           <Ionicons name="arrow-back" size={20} color="#7C3AED" />
           <ThemedText className="ml-2 text-primary font-bold">
-            Cambiar
+            Volver
           </ThemedText>
         </Pressable>
 
