@@ -53,15 +53,18 @@ const CarouselDot = React.memo(({ index, activeIndex }: CarouselDotProps) => {
 });
 
 // ─── Carousel item ─────────────────────────────────────────────────────────
+// ─── Carousel item ─────────────────────────────────────────────────────────
 const CarouselItem = React.memo(
   ({
     item,
     width,
     height,
+    onImageLoad,
   }: {
     item: FotoCatalogo;
     width: number;
     height: number;
+    onImageLoad?: (ratio: number) => void;
   }) => (
     <View
       style={{
@@ -78,6 +81,14 @@ const CarouselItem = React.memo(
         contentFit="contain"
         transition={180}
         placeholder="LGF5?xYk^6#M@-5c,1J5@[or[Q6."
+        onLoad={(e) => {
+          const w = e.source.width;
+          const h = e.source.height;
+          // Cuando la imagen carga, calculamos su relación de aspecto (ancho / alto)
+          if (w && h && onImageLoad) {
+            onImageLoad(w / h);
+          }
+        }}
       />
     </View>
   ),
@@ -132,16 +143,28 @@ function ImageGallery({
   topInset,
 }: ImageGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
+  // Estado para guardar la relación de aspecto de cada imagen
+  const [imageRatios, setImageRatios] = useState<Record<number, number>>({});
   const carouselRef = useRef<ICarouselInstance>(null);
   const hasMultiple = fotos.length > 1;
-  const carouselHeight = Math.min(containerWidth * 0.75, 500);
+
+  // Calculamos la altura dinámica. Si la imagen no ha cargado, usamos 1 (formato cuadrado).
+  const currentRatio = imageRatios[activeIndex] || 1;
+  const calculatedHeight = containerWidth / currentRatio;
+  
+  // Mantenemos la altura entre 300px y 600px para evitar que tome toda la pantalla
+  const carouselHeight = Math.min(Math.max(calculatedHeight, 300), 600);
+
+  const handleImageLoad = useCallback((index: number, ratio: number) => {
+    setImageRatios((prev) => ({ ...prev, [index]: ratio }));
+  }, []);
 
   if (fotos.length === 0) {
     return (
       <View
         style={{
           width: containerWidth,
-          height: carouselHeight,
+          height: containerWidth, // Cambiado a un cuadrado por defecto
           backgroundColor: "#EDE9FE",
           alignItems: "center",
           justifyContent: "center",
@@ -171,15 +194,16 @@ function ImageGallery({
         width={containerWidth}
         height={carouselHeight}
         autoPlay={hasMultiple}
-        autoPlayInterval={1800}
+        autoPlayInterval={3000} // Un poco más de tiempo para que la transición de altura sea más natural
         scrollAnimationDuration={400}
         data={fotos}
         onSnapToItem={setActiveIndex}
-        renderItem={({ item }) => (
+        renderItem={({ item, index }) => (
           <CarouselItem
             item={item}
             width={containerWidth}
             height={carouselHeight}
+            onImageLoad={(ratio) => handleImageLoad(index, ratio)}
           />
         )}
       />
