@@ -53,18 +53,19 @@ const CarouselDot = React.memo(({ index, activeIndex }: CarouselDotProps) => {
 });
 
 // ─── Carousel item ─────────────────────────────────────────────────────────
-// ─── Carousel item ─────────────────────────────────────────────────────────
 const CarouselItem = React.memo(
   ({
     item,
     width,
     height,
-    onImageLoad,
+    index,
+    onFirstImageLoad,
   }: {
     item: FotoCatalogo;
     width: number;
     height: number;
-    onImageLoad?: (ratio: number) => void;
+    index: number;
+    onFirstImageLoad?: (ratio: number) => void;
   }) => (
     <View
       style={{
@@ -78,15 +79,13 @@ const CarouselItem = React.memo(
       <Image
         source={{ uri: item.urlFoto ?? undefined }}
         style={{ width: "100%", height: "100%" }}
-        contentFit="contain"
+        contentFit="contain" // Mantiene la imagen íntegra dentro del espacio fijo
         transition={180}
         placeholder="LGF5?xYk^6#M@-5c,1J5@[or[Q6."
         onLoad={(e) => {
-          const w = e.source.width;
-          const h = e.source.height;
-          // Cuando la imagen carga, calculamos su relación de aspecto (ancho / alto)
-          if (w && h && onImageLoad) {
-            onImageLoad(w / h);
+          // SOLO si es la primera imagen (index 0), avisamos al padre
+          if (index === 0 && onFirstImageLoad && e.source.width && e.source.height) {
+            onFirstImageLoad(e.source.width / e.source.height);
           }
         }}
       />
@@ -144,20 +143,14 @@ function ImageGallery({
 }: ImageGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   // Estado para guardar la relación de aspecto de cada imagen
-  const [imageRatios, setImageRatios] = useState<Record<number, number>>({});
   const carouselRef = useRef<ICarouselInstance>(null);
+  const [fixedRatio, setFixedRatio] = useState<number>(1.2);
   const hasMultiple = fotos.length > 1;
 
   // Calculamos la altura dinámica. Si la imagen no ha cargado, usamos 1 (formato cuadrado).
-  const currentRatio = imageRatios[activeIndex] || 1;
-  const calculatedHeight = containerWidth / currentRatio;
-  
-  // Mantenemos la altura entre 300px y 600px para evitar que tome toda la pantalla
-  const carouselHeight = Math.min(Math.max(calculatedHeight, 300), 600);
+  const calculatedHeight = containerWidth / fixedRatio;
+  const carouselHeight = Math.min(Math.max(calculatedHeight, 300), 550);
 
-  const handleImageLoad = useCallback((index: number, ratio: number) => {
-    setImageRatios((prev) => ({ ...prev, [index]: ratio }));
-  }, []);
 
   if (fotos.length === 0) {
     return (
@@ -203,8 +196,7 @@ function ImageGallery({
             item={item}
             width={containerWidth}
             height={carouselHeight}
-            onImageLoad={(ratio) => handleImageLoad(index, ratio)}
-          />
+            onFirstImageLoad={(ratio) => setFixedRatio(ratio)} index={0}          />
         )}
       />
       <BackButton onPress={onBack} topInset={topInset} />
@@ -320,8 +312,7 @@ useEffect(() => {
       >
         <View style={{ width: "100%", maxWidth: MAX_CONTENT_WIDTH }}>
           {/* Skeleton de la imagen */}
-          <Shimmer width="100%" height={300} borderRadius={0} />
-
+          <Shimmer width="100%" height={containerWidth} borderRadius={0} />
           <View style={{ padding: 20 }}>
             {/* Categoría */}
             <Shimmer width={100} height={20} borderRadius={12} />
