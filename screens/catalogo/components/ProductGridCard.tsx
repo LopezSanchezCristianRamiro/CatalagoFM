@@ -123,28 +123,41 @@ export function ProductGridCard({ producto, onPress }: ProductGridCardProps) {
   };
 
   const handleAddToCart = (e: any) => {
-    e.stopPropagation?.();
-    addToCart(producto as any);
+  e.stopPropagation?.();
 
+  if (producto.estado === "desactivado") {
     Toast.hide();
-    setTimeout(() => {
-      Toast.show({
-        type: "success",
-        text1: "Añadido al carrito",
-        text2: `${producto.nombre} ha sido agregado al carrito.`,
-        visibilityTime: 3000,
-      });
-    }, 100);
 
-    playFeedbackAnimation();
+    Toast.show({
+      type: "error",
+      text1: "Producto no disponible",
+      text2: `${producto.nombre} no está disponible por el momento.`,
+      visibilityTime: 3000,
+    });
 
-    // Animación de vuelo al carrito
-    if (cardRef.current) {
-      cardRef.current.measureInWindow((x, y, w, h) => {
-        triggerFly(x, y, w, h, producto.fotos?.[0]?.urlFoto ?? undefined);
-      });
-    }
-  };
+    return;
+  }
+
+  addToCart(producto as any);
+
+  Toast.hide();
+  setTimeout(() => {
+    Toast.show({
+      type: "success",
+      text1: "Añadido al carrito",
+      text2: `${producto.nombre} ha sido agregado al carrito.`,
+      visibilityTime: 3000,
+    });
+  }, 100);
+
+  playFeedbackAnimation();
+
+  if (cardRef.current) {
+    cardRef.current.measureInWindow((x, y, w, h) => {
+      triggerFly(x, y, w, h, producto.fotos?.[0]?.urlFoto ?? undefined);
+    });
+  }
+};
 
   const imageUrl = producto.fotos?.[0]?.urlFoto;
   const tieneDescuento = producto.precioDescuento != null;

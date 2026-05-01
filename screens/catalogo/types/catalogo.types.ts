@@ -18,6 +18,7 @@ export interface ProductoCatalogo {
   idCategoria: number | null;
   categoria?: CategoriaCatalogo;
   fotos: FotoCatalogo[];
+  estado?: "activado" | "desactivado";
 }
 
 export interface PaginatedResponseCatalogo<T> {

@@ -8,6 +8,7 @@ import {
   ScrollView,
   View,
 } from "react-native";
+import Toast from "react-native-toast-message";
 import { ThemedText } from "../../components/ThemedText";
 import { FilterBar } from "./components/FilterBar";
 import { FlyingBubble } from "./components/FlyingBubble";
@@ -16,7 +17,6 @@ import { PromoCarousel } from "./components/PromoCarousel";
 import { SkeletonProductCard } from "./components/SkeletonProductCard";
 import { SkeletonPromoCarousel } from "./components/SkeletonPromoCarousel";
 import { useCatalogo } from "./hooks/useCatalogo";
-
 export default function CatalogoScreen() {
   const router = useRouter();
 
@@ -193,12 +193,22 @@ export default function CatalogoScreen() {
                     maxWidth: maxWidth,
                   }}
                 >
-                  <ProductGridCard
-                    producto={item}
-                    onPress={() =>
-                      router.push(`/catalogo/${item.idProducto}` as any)
-                    }
-                  />
+<ProductGridCard
+  producto={item}
+  onPress={() => {
+    if (item.estado === "desactivado") {
+      Toast.show({
+        type: "error",
+        text1: "Producto no disponible",
+        text2: "Este producto no está disponible por el momento.",
+        visibilityTime: 3000,
+      });
+      return;
+    }
+
+    router.push(`/catalogo/${item.idProducto}`);
+  }}
+/>
                 </View>
               ))}
               {/* Fantasmas para alinear última fila */}

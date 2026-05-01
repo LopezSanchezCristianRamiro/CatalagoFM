@@ -4,12 +4,12 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Pressable,
   ScrollView,
   View,
-  useWindowDimensions
+  useWindowDimensions,
 } from "react-native";
 import Animated, {
   FadeIn,
@@ -236,27 +236,52 @@ export default function CatalogoDetailScreen() {
 
   const { producto, loading, error } = useCatalogoDetail(idProducto);
   const addToCart = useCartStore((state) => state.addToCart);
+useEffect(() => {
+  if (producto?.estado === "desactivado") {
+    Toast.show({
+      type: "error",
+      text1: "Producto no disponible",
+      text2: "Este producto fue desactivado.",
+      visibilityTime: 3000,
+    });
 
+    router.replace("/catalogo");
+  }
+}, [producto, router]);
   const cartBtnScale = useSharedValue(1);
   const cartBtnStyle = useAnimatedStyle(() => ({
     transform: [{ scale: cartBtnScale.value }],
   }));
 
-  const handleAddToCart = useCallback(() => {
-    if (!producto) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    cartBtnScale.value = withSpring(0.94, { damping: 12 }, () => {
-      cartBtnScale.value = withSpring(1);
-    });
-    addToCart(producto as any);
+ const handleAddToCart = useCallback(() => {
+  if (!producto) return;
+
+  if (producto.estado === "desactivado") {
     Toast.show({
-      type: "success",
-      text1: "Añadido al carrito",
-      text2: `${producto.nombre} agregado correctamente.`,
-      visibilityTime: 2500,
+      type: "error",
+      text1: "Producto no disponible",
+      text2: "Este producto no puede añadirse al carrito.",
     });
-    router.back();
-  }, [producto, addToCart, cartBtnScale, router]);
+    return;
+  }
+
+  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+  cartBtnScale.value = withSpring(0.94, { damping: 12 }, () => {
+    cartBtnScale.value = withSpring(1);
+  });
+
+  addToCart(producto as any);
+
+  Toast.show({
+    type: "success",
+    text1: "Añadido al carrito",
+    text2: `${producto.nombre} agregado correctamente.`,
+    visibilityTime: 2500,
+  });
+
+  router.back();
+}, [producto, addToCart, cartBtnScale, router]);
 
   // ── Loading ─────────────────────────────────────────────────────────
   if (loading) {
