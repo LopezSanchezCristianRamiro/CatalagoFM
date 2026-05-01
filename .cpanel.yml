@@ -2,9 +2,9 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/met4s0ft3/catalogo.metasoft-bolivia.com
-    # 1. Borrar todo el directorio público EXCEPTO .htaccess y la carpeta api
-    - find $DEPLOYPATH -mindepth 1 -not \( -name ".htaccess" -o -name "api" \) -exec rm -rf {} \; 2>/dev/null || true
-    # 2. Copiar los nuevos archivos compilados
+    # 1. Borrar todo excepto la carpeta api y los archivos .htaccess
+    - find $DEPLOYPATH -mindepth 1 \( -name "api" -o -name ".htaccess" \) -prune -o -exec rm -rf {} \; 2>/dev/null || true
+    # 2. Copiar la nueva build
     - /bin/cp -R dist/* $DEPLOYPATH
     # 3. Permisos
     - chmod -R 755 $DEPLOYPATH
