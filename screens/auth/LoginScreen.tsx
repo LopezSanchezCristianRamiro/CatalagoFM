@@ -16,11 +16,13 @@ import { httpClient } from "../../http/httpClient";
 
 export default function LoginScreen() {
   const router = useRouter();
+
+  const { login } = useAuth();
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!username.trim() || !password.trim()) {
@@ -33,21 +35,35 @@ export default function LoginScreen() {
     }
 
     setLoading(true);
+
     try {
       const response = await httpClient.post<{
         token: string;
         user: any;
-      }>("/api/login", { username, password }, "Error al iniciar sesión");
+      }>(
+        "/api/login",
+        {
+          username: username.trim(),
+          password: password.trim(),
+        },
+        "Error al iniciar sesión"
+      );
 
       await login(response.token);
-      router.replace("/(tabs)/catalogo");
+
       Toast.show({
         type: "success",
         text1: "Bienvenido",
         text2: `Hola ${response.user?.nombreUsuario ?? ""}`,
       });
+
+      router.replace("/(tabs)/catalogo");
     } catch (error: any) {
-      Toast.show({ type: "error", text1: "Error", text2: error?.message });
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error?.message ?? "No se pudo iniciar sesión",
+      });
     } finally {
       setLoading(false);
     }
@@ -58,33 +74,34 @@ export default function LoginScreen() {
       <KeyboardAwareScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
-        enableOnAndroid={true}
+        enableOnAndroid
         extraScrollHeight={20}
       >
         <TouchableOpacity
           onPress={() => router.back()}
           className="absolute top-12 left-4 z-10 w-10 h-10 items-center justify-center rounded-full bg-white/80"
+          disabled={loading}
         >
           <Ionicons name="arrow-back" size={24} color="#1E1B4B" />
         </TouchableOpacity>
-        {/* Contenedor centrado con ancho máximo */}
+
         <View className="flex-1 justify-center items-center px-8 pt-20 pb-10">
           <View className="w-full max-w-md">
-            {/* Título */}
             <View className="mb-10">
               <ThemedText className="text-3xl font-bold mb-2">
                 Iniciar Sesión
               </ThemedText>
+
               <ThemedText className="text-base text-muted-foreground">
                 Ingresa tus credenciales para continuar
               </ThemedText>
             </View>
 
-            {/* Campo Usuario */}
             <View className="mb-5">
               <ThemedText className="text-sm font-medium mb-2">
                 Usuario o correo
               </ThemedText>
+
               <TextInput
                 className="w-full h-12 bg-white border border-border rounded-lg px-4 text-foreground text-base"
                 placeholder="Usuario"
@@ -94,15 +111,15 @@ export default function LoginScreen() {
                 value={username}
                 onChangeText={setUsername}
                 editable={!loading}
+                returnKeyType="next"
               />
             </View>
 
-            {/* Campo Contraseña */}
-            {/* Campo Contraseña */}
-            <View className="mb-5">
+            <View className="mb-2">
               <ThemedText className="text-sm font-medium mb-2">
                 Contraseña
               </ThemedText>
+
               <View className="relative">
                 <TextInput
                   className="w-full h-12 bg-white border border-border rounded-lg px-4 pr-12 text-foreground"
@@ -113,9 +130,11 @@ export default function LoginScreen() {
                   onChangeText={setPassword}
                   editable={!loading}
                   onSubmitEditing={handleLogin}
+                  returnKeyType="done"
                 />
+
                 <TouchableOpacity
-                  onPress={() => setShowPassword(!showPassword)}
+                  onPress={() => setShowPassword((prev) => !prev)}
                   className="absolute right-3 top-0 h-12 justify-center"
                   disabled={loading}
                 >
@@ -127,10 +146,20 @@ export default function LoginScreen() {
                 </TouchableOpacity>
               </View>
             </View>
+<TouchableOpacity
+  onPress={() => router.push("/forgot-password")}
+  disabled={loading}
+  activeOpacity={0.85}
+  className="flex-row items-center justify-center gap-2 mt-2 mb-4 bg-white border border-border rounded-lg py-3"
+>
+  <Ionicons name="key-outline" size={18} color="#7C3AED" />
 
-            {/* Botón */}
+  <ThemedText className="text-sm font-semibold text-accent">
+    Recuperar contraseña
+  </ThemedText>
+</TouchableOpacity>
             <TouchableOpacity
-              className={`mt-6 btn-tap-active h-12 bg-primary rounded-lg items-center justify-center ${
+              className={`mt-4 btn-tap-active h-12 bg-primary rounded-lg items-center justify-center ${
                 loading ? "opacity-70" : ""
               }`}
               onPress={handleLogin}
@@ -146,7 +175,6 @@ export default function LoginScreen() {
               )}
             </TouchableOpacity>
 
-            {/* Enlace a registro */}
             <TouchableOpacity
               onPress={() => router.push("/register")}
               className="mt-6 items-center"
