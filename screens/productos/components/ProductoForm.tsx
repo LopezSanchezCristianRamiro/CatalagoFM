@@ -221,7 +221,18 @@ useImperativeHandle(ref, () => ({
     : "Puedes tocar el recuadro de arriba para seleccionar una o varias imágenes."}
 </ThemedText>
 
-    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+ <ScrollView
+  horizontal
+  showsHorizontalScrollIndicator={true}
+  nestedScrollEnabled
+  decelerationRate="fast"
+  snapToAlignment="start"
+  contentContainerStyle={{
+    flexDirection: "row",
+    gap: 12,
+    paddingRight: 16,
+  }}
+>
       <View className="flex-row gap-3">
         {imagenesUri.map((uri, index) => (
           <View
