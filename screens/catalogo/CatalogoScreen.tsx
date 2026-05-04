@@ -1,13 +1,15 @@
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  Platform,
   RefreshControl,
   ScrollView,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import { ThemedText } from "../../components/ThemedText";
 import { FilterBar } from "./components/FilterBar";
@@ -17,8 +19,11 @@ import { PromoCarousel } from "./components/PromoCarousel";
 import { SkeletonProductCard } from "./components/SkeletonProductCard";
 import { SkeletonPromoCarousel } from "./components/SkeletonPromoCarousel";
 import { useCatalogo } from "./hooks/useCatalogo";
+
 export default function CatalogoScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const [isFocused, setIsFocused] = useState(false);
 
   const {
     productos,
@@ -38,12 +43,10 @@ export default function CatalogoScreen() {
     fetchInitialData,
   } = useCatalogo();
 
-  // Carga inicial única
   useEffect(() => {
     fetchInitialData();
   }, []);
 
-  // Filtrado con debounce
   useEffect(() => {
     if (loadingInit) return;
     const timer = setTimeout(() => {
@@ -55,7 +58,6 @@ export default function CatalogoScreen() {
   const showSpinnerInList =
     (loadingInit || applyingFilters) && productos.length === 0;
 
-  // Paginación infinita
   const scrollViewRef = useRef<ScrollView>(null);
   const isLoadMoreTriggered = useRef(false);
 
@@ -86,161 +88,119 @@ export default function CatalogoScreen() {
   const minWidth = 300;
   const maxWidth = 350;
 
+  // Lógica de filtrado activa (incluye el foco del teclado)
+  const isFiltering = searchQuery.length > 0 || categoriaActiva !== null || isFocused;
+
   return (
     <View style={{ flex: 1 }} className="bg-background">
       <ScrollView
         ref={scrollViewRef}
+        keyboardDismissMode="on-drag" 
+        keyboardShouldPersistTaps="handled"
         contentContainerStyle={{
-          // QUITAMOS el paddingHorizontal aquí para que el carrusel ocupe toda la pantalla
           paddingBottom: 20,
         }}
         onScroll={handleScroll}
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={refreshAll}
-            tintColor="#7C3AED"
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={refreshAll} tintColor="#7C3AED" />
         }
       >
-        {/* Carrusel de promociones (Ahora ocupa el 100% del ancho) */}
-        {/* Carrusel de promociones o skeleton */}
-        {loadingInit ? (
-          <SkeletonPromoCarousel />
-        ) : promociones.length > 0 ? (
-          <PromoCarousel
-            promociones={promociones}
-            onPressPromo={(prod) =>
-              router.push(`/catalogo/${prod.idProducto}` as any)
-            }
-          />
-        ) : null}
+        {/* Carrusel: solo si NO estamos buscando */}
+        {!isFiltering && (
+          <>
+            {loadingInit ? (
+              <SkeletonPromoCarousel />
+            ) : promociones.length > 0 ? (
+              <PromoCarousel
+                promociones={promociones}
+                onPressPromo={(prod) => router.push(`/catalogo/${prod.idProducto}` as any)}
+              />
+            ) : null}
+          </>
+        )}
 
-        {/* Barra de filtros con padding restaurado */}
-        <View className="pt-6 px-4">
+        {/* 
+            Contenedor de Filtros y Grid: 
+            Aplica un padding top de seguridad cuando el carrusel desaparece.
+        */}
+        <View 
+          style={{ 
+            paddingTop: isFiltering 
+              ? (insets.top + 24) // Barra de notificaciones + 24px de aire
+              : (Platform.OS === 'web' ? 24 : 10) // Espacio normal si hay carrusel
+          }}
+        >
           <FilterBar
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             categorias={categorias}
             categoriaActiva={categoriaActiva}
             setCategoriaActiva={setCategoriaActiva}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
           />
-        </View>
 
-        {/* Grid fluido estilo Metasoft con padding restaurado */}
-        {loadingInit ? (
-          <View
-            className="flex-row flex-wrap justify-center px-4"
-            style={{ gap: 16 }}
-          >
-            {Array.from({ length: 4 }).map((_, i) => (
-              <View
-                key={`skeleton-${i}`}
-                className="flex-1"
-                style={{ minWidth: 280, maxWidth: 330 }}
-              >
-                <SkeletonProductCard />
-              </View>
-            ))}
-            {/* Fantasmas para alinear */}
-            {Array.from({ length: 4 }).map((_, i) => (
-              <View
-                key={`phantom-${i}`}
-                className="flex-1"
-                style={{ minWidth: 280, maxWidth: 330, height: 0 }}
-                pointerEvents="none"
-              />
-            ))}
-          </View>
-        ) : applyingFilters && productos.length === 0 ? (
-          <View
-            className="flex-row flex-wrap justify-center px-4"
-            style={{ gap: 16 }}
-          >
-            {Array.from({ length: 4 }).map((_, i) => (
-              <View
-                key={`filter-skeleton-${i}`}
-                className="flex-1"
-                style={{ minWidth: 280, maxWidth: 330 }}
-              >
-                <SkeletonProductCard />
-              </View>
-            ))}
-            {/* Fantasmas para alinear */}
-            {Array.from({ length: 4 }).map((_, i) => (
-              <View
-                key={`phantom-filter-${i}`}
-                className="flex-1"
-                style={{ minWidth: 280, maxWidth: 330, height: 0 }}
-                pointerEvents="none"
-              />
-            ))}
-          </View>
-        ) : productos.length > 0 ? (
-          <>
-            <View
-              className="flex-row flex-wrap justify-center px-4"
-              style={{ gap: 16 }}
-            >
-              {productos.map((item) => (
-                <View
-                  key={item.idProducto.toString()}
-                  className="flex-1"
-                  style={{
-                    minWidth: minWidth,
-                    maxWidth: maxWidth,
-                  }}
-                >
-<ProductGridCard
-  producto={item}
-  onPress={() => {
-    if (item.estado === "desactivado") {
-      Toast.show({
-        type: "error",
-        text1: "Producto no disponible",
-        text2: "Este producto no está disponible por el momento.",
-        visibilityTime: 3000,
-      });
-      return;
-    }
-
-    router.push(`/catalogo/${item.idProducto}`);
-  }}
-/>
+          {/* Grid de productos */}
+          {loadingInit ? (
+            <View className="flex-row flex-wrap justify-center px-4" style={{ gap: 16 }}>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <View key={`sk-${i}`} className="flex-1" style={{ minWidth: 280, maxWidth: 330 }}>
+                  <SkeletonProductCard />
                 </View>
               ))}
-              {/* Fantasmas para alinear última fila */}
+            </View>
+          ) : applyingFilters && productos.length === 0 ? (
+            <View className="flex-row flex-wrap justify-center px-4" style={{ gap: 16 }}>
               {Array.from({ length: 4 }).map((_, i) => (
-                <View
-                  key={`phantom-${i}`}
-                  className="flex-1"
-                  style={{
-                    minWidth: minWidth,
-                    maxWidth: maxWidth,
-                    height: 0,
-                  }}
-                  pointerEvents="none"
-                />
+                <View key={`f-sk-${i}`} className="flex-1" style={{ minWidth: 280, maxWidth: 330 }}>
+                  <SkeletonProductCard />
+                </View>
               ))}
             </View>
-
-            {(loadingProductos || applyingFilters) && (
-              <View className="py-6 items-center">
-                <ActivityIndicator size="large" color="#7C3AED" />
+          ) : productos.length > 0 ? (
+            <>
+              <View className="flex-row flex-wrap justify-center px-4" style={{ gap: 16 }}>
+                {productos.map((item) => (
+                  <View key={item.idProducto.toString()} className="flex-1" style={{ minWidth, maxWidth }}>
+                    <ProductGridCard
+                      producto={item}
+                      onPress={() => {
+                        if (item.estado === "desactivado") {
+                          Toast.show({
+                            type: "error",
+                            text1: "Producto no disponible",
+                          });
+                          return;
+                        }
+                        router.push(`/catalogo/${item.idProducto}`);
+                      }}
+                    />
+                  </View>
+                ))}
+                {/* Fantasmas para alineación */}
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <View key={`ph-${i}`} className="flex-1" style={{ minWidth, maxWidth, height: 0 }} pointerEvents="none" />
+                ))}
               </View>
-            )}
-          </>
-        ) : (
-          !showSpinnerInList && (
-            <View className="py-20 px-4 items-center">
-              <ThemedText className="text-muted-foreground">
-                No se encontraron productos.
-              </ThemedText>
-            </View>
-          )
-        )}
+
+              {(loadingProductos || applyingFilters) && (
+                <View className="py-6 items-center">
+                  <ActivityIndicator size="large" color="#7C3AED" />
+                </View>
+              )}
+            </>
+          ) : (
+            !showSpinnerInList && (
+              <View className="py-20 px-4 items-center">
+                <ThemedText className="text-muted-foreground">
+                  No se encontraron productos.
+                </ThemedText>
+              </View>
+            )
+          )}
+        </View>
       </ScrollView>
       <FlyingBubble />
     </View>

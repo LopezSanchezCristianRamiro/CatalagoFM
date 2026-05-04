@@ -1,4 +1,3 @@
-// screens/catalogo/components/FilterBar.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
@@ -19,6 +18,8 @@ interface FilterBarProps {
   categorias: CategoriaCatalogo[];
   categoriaActiva: number | null;
   setCategoriaActiva: (id: number | null) => void;
+  onFocus?: () => void; 
+  onBlur?: () => void;  
 }
 
 export function FilterBar({
@@ -27,15 +28,18 @@ export function FilterBar({
   categorias,
   categoriaActiva,
   setCategoriaActiva,
+  onFocus,
+  onBlur,
 }: FilterBarProps) {
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === "web" && width >= 1024;
+  const isSearching = searchQuery.length > 0;
 
   return (
-    <View className="px-6 mb-10">
+    <View className={`px-2 ${isSearching ? "mb-4" : "mb-6"}`}>
       {/* Buscador cápsula moderno */}
       <View
-        className={`flex-row items-center rounded-full px-6 mx-auto mb-8 ${
+        className={`flex-row items-center rounded-full px-6 mx-auto mb-6 ${
           isDesktop ? "h-14 w-1/2" : "h-12 w-full"
         }`}
         style={{
@@ -49,23 +53,25 @@ export function FilterBar({
           placeholderTextColor="#94a3b8"
           value={searchQuery}
           onChangeText={setSearchQuery}
-          // Quita el molesto outline azul en Web
+          onFocus={onFocus} 
+          onBlur={onBlur}
           style={{ outlineStyle: "none" } as any}
+          autoCorrect={false}
+          returnKeyType="search"
         />
       </View>
 
-      {/* Categorías: minimalistas con línea de gradiente */}
+      {/* Categorías */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{
           alignItems: "center",
           justifyContent: isDesktop ? "center" : "flex-start",
-          width: isDesktop ? "100%" : "auto",
+          width: isDesktop ? "100%" : undefined,
         }}
       >
         <View className="flex-row items-center">
-          {/* Botón "Todos" */}
           <TouchableOpacity
             onPress={() => setCategoriaActiva(null)}
             className="mr-8 items-center"
@@ -87,7 +93,6 @@ export function FilterBar({
             )}
           </TouchableOpacity>
 
-          {/* Mapeo de categorías */}
           {categorias.map((cat) => (
             <TouchableOpacity
               key={cat.idCategoria}
