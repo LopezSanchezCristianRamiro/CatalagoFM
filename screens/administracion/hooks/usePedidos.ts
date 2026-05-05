@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { httpClient } from "../../../http/httpClient";
 import { Pedido } from "../types/pedido.types";
 
@@ -6,7 +6,7 @@ export function usePedidos() {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchPedidos = async () => {
+  const fetchPedidos = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -20,7 +20,7 @@ export function usePedidos() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const actualizarEstado = async (idPedido: number, estado: string) => {
     try {
@@ -37,7 +37,7 @@ export function usePedidos() {
 
   useEffect(() => {
     fetchPedidos();
-  }, []);
+  }, [fetchPedidos]);
 
   return {
     pedidos,

@@ -34,6 +34,7 @@ export type Pedido = {
   correo?: string;
   celular?: string;
   telefono?: string;
+  idRol?: number;
 };
 
   detalles: DetallePedido[];

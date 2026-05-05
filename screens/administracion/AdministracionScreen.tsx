@@ -1,6 +1,8 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Pressable,
   ScrollView,
   View,
   useWindowDimensions,
@@ -11,8 +13,12 @@ import AdminFilters from "./components/AdminFilters";
 import AdminHeader from "./components/AdminHeader";
 import AdminMetricCard from "./components/AdminMetricCard";
 import AdminSearchBar from "./components/AdminSearchBar";
+import ClientesModal from "./components/ClientesModal";
 import PedidoCard from "./components/PedidoCard";
+import PedidosHoyModal from "./components/PedidosHoyModal";
+import VentasCategoriasModal from "./components/VentasCategoriasModal";
 import { usePedidos } from "./hooks/usePedidos";
+
 function parseFechaInput(value: string) {
   if (!value) return null;
 
@@ -37,18 +43,49 @@ function esMismaFechaOAntes(fecha: Date, fin: Date) {
 }
 
 export default function AdministracionScreen() {
-  const { pedidos, loading, actualizarEstado } = usePedidos();
+  const { pedidos, loading, actualizarEstado, refetch } = usePedidos();
   const { width } = useWindowDimensions();
 
   const isMobile = width < 700;
-const isTablet = width >= 700 && width < 1100;
-const isCompact = isMobile || isTablet;
+  const isTablet = width >= 700 && width < 1100;
+  const isCompact = isMobile || isTablet;
 
   const [search, setSearch] = useState("");
   const [estado, setEstado] = useState("todos");
   const [categoria, setCategoria] = useState("todas");
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
+  const [openPedidosHoy, setOpenPedidosHoy] = useState(false);
+  const [openVentasCategorias, setOpenVentasCategorias] = useState(false);
+  const [openClientes, setOpenClientes] = useState(false);
+
+  const handleRefresh = async () => {
+  await refetch();
+};
+
+  const pedidosPorPeriodo = useMemo(() => {
+    const inicio = parseFechaInput(fechaInicio);
+    const fin = parseFechaInput(fechaFin);
+
+    return pedidos.filter((pedido) => {
+      const fechaPedido = new Date(pedido.fechaCreacion);
+
+      const coincideFechaInicio = inicio
+        ? esMismaFechaODespues(fechaPedido, inicio)
+        : true;
+
+      const coincideFechaFin = fin
+        ? esMismaFechaOAntes(fechaPedido, fin)
+        : true;
+
+      return coincideFechaInicio && coincideFechaFin;
+    });
+  }, [pedidos, fechaInicio, fechaFin]);
+
+  const totalPeriodo = pedidosPorPeriodo.reduce(
+    (acc, pedido) => acc + Number(pedido.total || 0),
+    0
+  );
 
   const pedidosFiltrados = useMemo(() => {
     const inicio = parseFechaInput(fechaInicio);
@@ -102,21 +139,7 @@ const isCompact = isMobile || isTablet;
 
   const hoy = new Date();
 
-  const pedidosDelMes = pedidos.filter((pedido) => {
-    const fecha = new Date(pedido.fechaCreacion);
-
-    return (
-      fecha.getMonth() === hoy.getMonth() &&
-      fecha.getFullYear() === hoy.getFullYear()
-    );
-  });
-
-  const totalMes = pedidosDelMes.reduce(
-    (acc, pedido) => acc + Number(pedido.total || 0),
-    0
-  );
-
-  const pedidosHoy = pedidos.filter((pedido) => {
+  const pedidosHoyLista = pedidos.filter((pedido) => {
     const fecha = new Date(pedido.fechaCreacion);
 
     return (
@@ -124,10 +147,15 @@ const isCompact = isMobile || isTablet;
       fecha.getMonth() === hoy.getMonth() &&
       fecha.getFullYear() === hoy.getFullYear()
     );
-  }).length;
+  });
+
+  const pedidosHoy = pedidosHoyLista.length;
 
   const cuentasActivas = new Set(
-    pedidos.map((pedido) => pedido.usuario?.idUsuario).filter(Boolean)
+    pedidos
+      .filter((pedido) => pedido.usuario?.idRol !== 1)
+      .map((pedido) => pedido.usuario?.idUsuario)
+      .filter(Boolean)
   ).size;
 
   if (loading) {
@@ -139,96 +167,142 @@ const isCompact = isMobile || isTablet;
   }
 
   return (
-    <ScrollView className="flex-1 bg-[#fbf7f6]">
-      <View className={isCompact ? "px-4 py-8" : "px-8 py-10"}>
-       <View
-  className={
-    isCompact
-      ? "mb-8 gap-5"
-      : "flex-row justify-between items-start mb-10 gap-6"
-  }
->
-<AdminHeader isMobile={isCompact} />
+    <>
+      <ScrollView className="flex-1 bg-[#fbf7f6]">
+        <View className={isCompact ? "px-4 py-8" : "px-8 py-10"}>
+          <View
+            className={
+              isCompact
+                ? "mb-8 gap-5"
+                : "flex-row justify-between items-start mb-10 gap-6"
+            }
+          >
+            <AdminHeader isMobile={isCompact} />
 
-         <View className={isCompact ? "w-full" : "w-[520px]"}>
-           <AdminSearchBar
-  search={search}
-  setSearch={setSearch}
-  fechaInicio={fechaInicio}
-  setFechaInicio={setFechaInicio}
-  fechaFin={fechaFin}
-  setFechaFin={setFechaFin}
-  isMobile={isCompact}
-/>
+            <View className={isCompact ? "w-full" : "w-[520px]"}>
+              <AdminSearchBar
+                search={search}
+                setSearch={setSearch}
+                fechaInicio={fechaInicio}
+                setFechaInicio={setFechaInicio}
+                fechaFin={fechaFin}
+                setFechaFin={setFechaFin}
+                isMobile={isCompact}
+              />
+            </View>
+          </View>
+
+          <View className={isCompact ? "gap-4 mb-10" : "flex-row gap-6 mb-12"}>
+            <Pressable
+              onPress={() => setOpenVentasCategorias(true)}
+              className={isCompact ? "w-full" : "flex-1"}
+            >
+              <AdminMetricCard
+                title="Ventas Totales por periodo de Tiempo"
+                value={`Bs. ${totalPeriodo.toFixed(2)}`}
+                subtitle={`${pedidosPorPeriodo.length} pedidos en el periodo`}
+                icon="card-outline"
+                isMobile={isCompact}
+              />
+            </Pressable>
+
+            <Pressable
+              onPress={() => setOpenPedidosHoy(true)}
+              className={isCompact ? "w-full" : "flex-1"}
+            >
+              <AdminMetricCard
+                title="Pedidos de Hoy"
+                value={String(pedidosHoy)}
+                subtitle="Pedidos registrados hoy"
+                icon="bag-handle-outline"
+                isMobile={isCompact}
+              />
+            </Pressable>
+
+            <Pressable
+              onPress={() => setOpenClientes(true)}
+              className={isCompact ? "w-full" : "flex-1"}
+            >
+              <AdminMetricCard
+                title="Cuentas Activas"
+                value={String(cuentasActivas)}
+                subtitle="Clientes con pedidos"
+                icon="people-outline"
+                isMobile={isCompact}
+              />
+            </Pressable>
+          </View>
+
+          <View
+            className={
+              isCompact
+                ? "gap-4 mb-5"
+                : "flex-row justify-between items-center mb-5"
+            }
+          >
+            <ThemedText className="text-2xl font-bold text-[#050816]">
+              Pedidos Recientes
+            </ThemedText>
+
+            <AdminFilters
+              estado={estado}
+              setEstado={setEstado}
+              categoria={categoria}
+              setCategoria={setCategoria}
+              isMobile={isCompact}
+            />
+          </View>
+
+          <View className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
+            {pedidosFiltrados.length === 0 ? (
+              <View className="p-6">
+                <ThemedText className="text-center text-gray-500">
+                  No se encontraron resultados.
+                </ThemedText>
+              </View>
+            ) : (
+              pedidosFiltrados.map((pedido) => (
+                <PedidoCard
+                  key={pedido.idPedido}
+                  pedido={pedido}
+                  isMobile={isCompact}
+                  onEstadoChange={actualizarEstado}
+                />
+              ))
+            )}
           </View>
         </View>
+      </ScrollView>
 
-        <View className={isCompact ? "gap-4 mb-10" : "flex-row gap-6 mb-12"}>
-          <AdminMetricCard
-            title="Ventas Totales (Mes)"
-            value={`Bs. ${totalMes.toFixed(2)}`}
-            subtitle={`${pedidosDelMes.length} pedidos este mes`}
-            icon="card-outline"
-            isMobile={isCompact}
-            
-          />
-
-          <AdminMetricCard
-            title="Pedidos de Hoy"
-            value={String(pedidosHoy)}
-            subtitle="Pedidos registrados hoy"
-            icon="bag-handle-outline"
-            isMobile={isCompact}
-          />
-
-          <AdminMetricCard
-            title="Cuentas Activas"
-            value={String(cuentasActivas)}
-            subtitle="Clientes con pedidos"
-            icon="people-outline"
-            isMobile={isCompact}
-          />
-        </View>
-
-       <View
-  className={
-    isCompact
-      ? "gap-4 mb-5"
-      : "flex-row justify-between items-center mb-5"
-  }
->
-          <ThemedText className="text-2xl font-bold text-[#050816]">
-            Pedidos Recientes
-          </ThemedText>
-
-          <AdminFilters
-            estado={estado}
-            setEstado={setEstado}
-            categoria={categoria}
-            setCategoria={setCategoria}
-            isMobile={isCompact}
-          />
-        </View>
-
-       <View className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
-  {pedidosFiltrados.length === 0 ? (
-    <View className="p-6">
-      <ThemedText className="text-center text-gray-500">
-        No se encontraron resultados.
-      </ThemedText>
-    </View>
-  ) : (
-    pedidosFiltrados.map((pedido) => (
-      <PedidoCard
-        key={pedido.idPedido}
-        pedido={pedido}
+      <PedidosHoyModal
+        visible={openPedidosHoy}
+        pedidos={pedidosHoyLista}
         isMobile={isCompact}
+        onClose={() => setOpenPedidosHoy(false)}
         onEstadoChange={actualizarEstado}
       />
-    ))
-  )}
-</View>
+
+      <VentasCategoriasModal
+        visible={openVentasCategorias}
+        pedidos={pedidosPorPeriodo}
+        onClose={() => setOpenVentasCategorias(false)}
+      />
+
+      <ClientesModal
+        visible={openClientes}
+        pedidos={pedidos}
+        onClose={() => setOpenClientes(false)}
+        onEstadoChange={actualizarEstado}
+      />
+
+      <View className="absolute right-4 bottom-8 items-center gap-2">
+        <Pressable
+          onPress={handleRefresh}
+          className="bg-slate-950 w-12 h-12 rounded-full items-center justify-center shadow-lg"
+        >
+          <Ionicons name="refresh-outline" size={20} color="white" />
+        </Pressable>
       </View>
-    </ScrollView>
+    </>
   );
 }
