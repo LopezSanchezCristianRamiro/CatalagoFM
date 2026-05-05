@@ -8,15 +8,15 @@ import { useRouter } from "expo-router";
 import React, { useCallback, useRef, useState } from "react";
 import { Pressable, ScrollView, View, useWindowDimensions } from "react-native";
 import Animated, {
-    FadeIn,
-    FadeInDown,
-    FadeInLeft,
-    FadeInRight,
-    FadeInUp,
-    interpolateColor,
-    useAnimatedStyle,
-    useSharedValue,
-    withSpring
+  FadeIn,
+  FadeInDown,
+  FadeInLeft,
+  FadeInRight,
+  FadeInUp,
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring
 } from "react-native-reanimated";
 import Carousel, { ICarouselInstance } from "react-native-reanimated-carousel";
 import Toast from "react-native-toast-message";
