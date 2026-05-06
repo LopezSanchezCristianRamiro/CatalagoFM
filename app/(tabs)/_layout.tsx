@@ -1,14 +1,18 @@
 // app/(tabs)/_layout.tsx
+
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
+
 import { CustomTabBar } from "../../components/CustomTabBar";
 import { Navbar } from "../../components/Navbar";
+import NotificationsButton from "../../components/NotificationsButton";
+
 import { useAuth } from "../../contexts/AuthContext";
 import { useResponsive } from "../../hooks/useResponsive";
 
 export default function TabsLayout() {
-  const { user, loading, isAdmin } = useAuth();
+  const { loading, isAdmin } = useAuth();
   const { isDesktop } = useResponsive();
 
   if (loading) {
@@ -19,11 +23,9 @@ export default function TabsLayout() {
     );
   }
 
-  // ===== ESCRITORIO: sidebar + contenido =====
   if (isDesktop) {
     return (
-      <View className="flex-1 flex-column bg-background">
-        {/* Ahora es un Navbar horizontal arriba */}
+      <View className="flex-1 bg-background">
         <Navbar isAdmin={isAdmin} />
 
         <View className="flex-1">
@@ -31,65 +33,88 @@ export default function TabsLayout() {
             <Tabs.Screen name="catalogo" />
             <Tabs.Screen name="carrito" />
             <Tabs.Screen name="perfil" />
-            <Tabs.Screen name="productos" />
-            <Tabs.Screen name="administracion" />
+
+            <Tabs.Screen
+              name="productos"
+              options={{
+                href: isAdmin ? undefined : null,
+              }}
+            />
+
+            <Tabs.Screen
+              name="administracion"
+              options={{
+                href: isAdmin ? undefined : null,
+              }}
+            />
           </Tabs>
         </View>
+
+        <NotificationsButton />
       </View>
     );
   }
 
-  // ===== MÓVIL: tabs inferiores =====
   return (
-    <Tabs
-      tabBar={(props) => <CustomTabBar {...props} isAdmin={isAdmin} />}
-      screenOptions={{ headerShown: false }}
-    >
-      <Tabs.Screen
-        name="catalogo"
-        options={{
-          tabBarLabel: "Catálogo",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="grid-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="carrito"
-        options={{
-          tabBarLabel: "Carrito",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="cart-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="perfil"
-        options={{
-          tabBarLabel: "Perfil",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="productos"
-        options={{
-          tabBarLabel: "Productos",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="add-circle-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="administracion"
-        options={{
-          tabBarLabel: "Dueño",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="bar-chart-outline" size={size} color={color} />
-          ),
-        }}
-      />
-    </Tabs>
+    <View className="flex-1 bg-background">
+      <Tabs
+        tabBar={(props) => <CustomTabBar {...props} isAdmin={isAdmin} />}
+        screenOptions={{ headerShown: false }}
+      >
+        <Tabs.Screen
+          name="catalogo"
+          options={{
+            tabBarLabel: "Catálogo",
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="grid-outline" size={size} color={color} />
+            ),
+          }}
+        />
+
+        <Tabs.Screen
+          name="carrito"
+          options={{
+            tabBarLabel: "Carrito",
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="cart-outline" size={size} color={color} />
+            ),
+          }}
+        />
+
+        <Tabs.Screen
+          name="perfil"
+          options={{
+            tabBarLabel: "Perfil",
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="person-outline" size={size} color={color} />
+            ),
+          }}
+        />
+
+        <Tabs.Screen
+          name="productos"
+          options={{
+            href: isAdmin ? undefined : null,
+            tabBarLabel: "Productos",
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="add-circle-outline" size={size} color={color} />
+            ),
+          }}
+        />
+
+        <Tabs.Screen
+          name="administracion"
+          options={{
+            href: isAdmin ? undefined : null,
+            tabBarLabel: "Dueño",
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="bar-chart-outline" size={size} color={color} />
+            ),
+          }}
+        />
+      </Tabs>
+
+      <NotificationsButton />
+    </View>
   );
 }
