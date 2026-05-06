@@ -4,10 +4,12 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
+  Platform,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { CountryPicker } from "react-native-country-codes-picker";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import Toast from "react-native-toast-message";
 import { ThemedText } from "../../components/ThemedText";
@@ -17,15 +19,24 @@ import { httpClient } from "../../http/httpClient";
 export default function RegisterScreen() {
   const router = useRouter();
   const { login } = useAuth();
+
   const [nombre, setNombre] = useState("");
   const [nombreUsuario, setNombreUsuario] = useState("");
   const [correo, setCorreo] = useState("");
-  const [telefono, setTelefono] = useState("");
+
+  // ───── Campos de teléfono ─────
+  const [countryCode, setCountryCode] = useState("591"); // Bolivia por defecto
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [pickerVisible, setPickerVisible] = useState(false);
+  const [pickerKey, setPickerKey] = useState(0);
+
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const fullPhoneNumber = `${countryCode}${phoneNumber.trim()}`;
 
   const validarEmail = (email: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -35,7 +46,7 @@ export default function RegisterScreen() {
       !nombre.trim() ||
       !nombreUsuario.trim() ||
       !correo.trim() ||
-      !telefono.trim() ||
+      !phoneNumber.trim() ||
       !password ||
       !passwordConfirmation
     ) {
@@ -51,6 +62,14 @@ export default function RegisterScreen() {
         type: "error",
         text1: "Correo inválido",
         text2: "Ingresa un formato de correo válido.",
+      });
+      return;
+    }
+    if (!/^\d{7,}$/.test(phoneNumber.trim())) {
+      Toast.show({
+        type: "error",
+        text1: "Teléfono inválido",
+        text2: "El número debe tener al menos 7 dígitos y solo números.",
       });
       return;
     }
@@ -83,7 +102,7 @@ export default function RegisterScreen() {
           nombreUsuario: nombreUsuario.trim(),
           correo: correo.trim(),
           password,
-          telefono: telefono.trim(),
+          telefono: fullPhoneNumber, // ← sin "+"
         },
         "Error al registrarse",
       );
@@ -182,20 +201,47 @@ export default function RegisterScreen() {
               />
             </View>
 
-            {/* Teléfono (nuevo) */}
+            {/* ───── Teléfono (fila) ───── */}
             <View className="mb-5">
               <ThemedText className="text-sm font-medium mb-2">
                 Teléfono
               </ThemedText>
-              <TextInput
-                className="w-full h-12 bg-white border border-border rounded-lg px-4 text-foreground"
-                placeholder="7xxxxxxx"
-                placeholderTextColor="#A1A1AA"
-                keyboardType="phone-pad"
-                value={telefono}
-                onChangeText={setTelefono}
-                editable={!loading}
-              />
+              <View className="flex-row items-start">
+                {/* Selector de prefijo */}
+                <TouchableOpacity
+                  onPress={() => {
+                    setPickerKey((prev) => prev + 1);
+                    setPickerVisible(true);
+                  }}
+                  className="flex-row items-center bg-white border border-border rounded-lg px-4 py-3 mr-2"
+                  accessibilityRole="button"
+                  accessibilityLabel={`Prefijo +${countryCode}`}
+                >
+                  <ThemedText className="text-foreground font-semibold text-base">
+                    +{countryCode}
+                  </ThemedText>
+                  <Ionicons
+                    name="chevron-down"
+                    size={14}
+                    color="#9CA3AF"
+                    style={{ marginLeft: 6 }}
+                  />
+                </TouchableOpacity>
+
+                {/* Número local */}
+                <View className="flex-1">
+                  <TextInput
+                    className="bg-white border border-border rounded-lg px-4 h-12 text-foreground"
+                    placeholder="Número de celular"
+                    placeholderTextColor="#A1A1AA"
+                    keyboardType="phone-pad"
+                    value={phoneNumber}
+                    onChangeText={setPhoneNumber}
+                    editable={!loading}
+                    maxLength={15}
+                  />
+                </View>
+              </View>
             </View>
 
             {/* Contraseña */}
@@ -303,6 +349,46 @@ export default function RegisterScreen() {
           </View>
         </View>
       </KeyboardAwareScrollView>
+
+      {/* ───── CountryPicker ───── */}
+      <CountryPicker
+        key={pickerKey}
+        show={pickerVisible}
+        pickerButtonOnPress={(item) => {
+          const cleanCode = item.dial_code.replace("+", "");
+          setCountryCode(cleanCode);
+          setPickerVisible(false);
+        }}
+        onBackdropPress={() => setPickerVisible(false)}
+        lang="es"
+        initialState={""}
+        inputPlaceholder="Buscar país..."
+        style={{
+          modal: {
+            height: 450,
+            width: "100%",
+            maxWidth: 500,
+            backgroundColor: "#FFFFFF",
+            borderRadius: 24,
+            alignSelf: "center",
+          },
+          textInput: {
+            height: 50,
+            borderRadius: 12,
+            paddingHorizontal: 16,
+            backgroundColor: "#F5F3FF",
+            fontFamily: "Plus Jakarta Sans",
+            color: "#1E1B4B",
+          },
+          countryName: { fontFamily: "Plus Jakarta Sans" },
+          dialCode: { fontFamily: "Plus Jakarta Sans", fontWeight: "700" },
+          flag: {
+            fontFamily: Platform.OS === "web" ? "system-ui" : undefined,
+            fontSize: 20,
+          },
+          countryButtonStyles: { height: 56, paddingHorizontal: 16 },
+        }}
+      />
     </View>
   );
 }

@@ -13,6 +13,7 @@ import Toast from "react-native-toast-message";
 import { ThemedText } from "../../components/ThemedText";
 import { useAuth } from "../../contexts/AuthContext";
 import { httpClient } from "../../http/httpClient";
+import { GoogleSignInButton } from "./components/GoogleSignInButton";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -46,7 +47,7 @@ export default function LoginScreen() {
           username: username.trim(),
           password: password.trim(),
         },
-        "Error al iniciar sesión"
+        "Error al iniciar sesión",
       );
 
       await login(response.token);
@@ -146,18 +147,18 @@ export default function LoginScreen() {
                 </TouchableOpacity>
               </View>
             </View>
-<TouchableOpacity
-  onPress={() => router.push("/forgot-password")}
-  disabled={loading}
-  activeOpacity={0.85}
-  className="flex-row items-center justify-center gap-2 mt-2 mb-4 bg-white border border-border rounded-lg py-3"
->
-  <Ionicons name="key-outline" size={18} color="#7C3AED" />
+            <TouchableOpacity
+              onPress={() => router.push("/forgot-password")}
+              disabled={loading}
+              activeOpacity={0.85}
+              className="flex-row items-center justify-center gap-2 mt-2 mb-4 bg-white border border-border rounded-lg py-3"
+            >
+              <Ionicons name="key-outline" size={18} color="#7C3AED" />
 
-  <ThemedText className="text-sm font-semibold text-accent">
-    Recuperar contraseña
-  </ThemedText>
-</TouchableOpacity>
+              <ThemedText className="text-sm font-semibold text-accent">
+                Recuperar contraseña
+              </ThemedText>
+            </TouchableOpacity>
             <TouchableOpacity
               className={`mt-4 btn-tap-active h-12 bg-primary rounded-lg items-center justify-center ${
                 loading ? "opacity-70" : ""
@@ -189,6 +190,17 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* Botón de prueba Google */}
+        <View className="flex-row items-center my-6">
+          <View className="flex-1 h-px bg-border" />
+          <ThemedText className="mx-4 text-sm text-muted-foreground">
+            o prueba con
+          </ThemedText>
+          <View className="flex-1 h-px bg-border" />
+        </View>
+
+        <GoogleSignInButton />
       </KeyboardAwareScrollView>
     </View>
   );
