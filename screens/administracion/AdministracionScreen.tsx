@@ -60,8 +60,8 @@ export default function AdministracionScreen() {
   const [openClientes, setOpenClientes] = useState(false);
 
   const handleRefresh = async () => {
-  await refetch();
-};
+    await refetch();
+  };
 
   const pedidosPorPeriodo = useMemo(() => {
     const inicio = parseFechaInput(fechaInicio);
@@ -84,7 +84,7 @@ export default function AdministracionScreen() {
 
   const totalPeriodo = pedidosPorPeriodo.reduce(
     (acc, pedido) => acc + Number(pedido.total || 0),
-    0
+    0,
   );
 
   const pedidosFiltrados = useMemo(() => {
@@ -114,7 +114,7 @@ export default function AdministracionScreen() {
           : pedido.detalles?.some((detalle) =>
               detalle.producto?.categoria?.nombre
                 ?.toLowerCase()
-                .includes(categoria.toLowerCase())
+                .includes(categoria.toLowerCase()),
             );
 
       const fechaPedido = new Date(pedido.fechaCreacion);
@@ -155,7 +155,7 @@ export default function AdministracionScreen() {
     pedidos
       .filter((pedido) => pedido.usuario?.idRol !== 1)
       .map((pedido) => pedido.usuario?.idUsuario)
-      .filter(Boolean)
+      .filter(Boolean),
   ).size;
 
   if (loading) {
@@ -167,7 +167,7 @@ export default function AdministracionScreen() {
   }
 
   return (
-    <>
+    <View className="flex-1 bg-[#fbf7f6]">
       <ScrollView className="flex-1 bg-[#fbf7f6]">
         <View className={isCompact ? "px-4 py-8" : "px-8 py-10"}>
           <View
@@ -273,7 +273,6 @@ export default function AdministracionScreen() {
           </View>
         </View>
       </ScrollView>
-
       <PedidosHoyModal
         visible={openPedidosHoy}
         pedidos={pedidosHoyLista}
@@ -303,6 +302,6 @@ export default function AdministracionScreen() {
           <Ionicons name="refresh-outline" size={20} color="white" />
         </Pressable>
       </View>
-    </>
+    </View>
   );
 }

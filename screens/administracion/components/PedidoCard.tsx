@@ -68,7 +68,7 @@ ${productos}
 
 Total: Bs. ${Number(pedido.total).toFixed(2)}
 
-Gracias por tu compra 🙌`;
+Gracias por tu compra`;
 
   const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
 
