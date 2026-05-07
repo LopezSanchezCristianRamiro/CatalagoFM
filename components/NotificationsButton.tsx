@@ -3,14 +3,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useMemo, useState } from "react";
 import {
-    ActivityIndicator,
-    Modal,
-    Platform,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
-    useWindowDimensions,
+  ActivityIndicator,
+  Modal,
+  Platform,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+  useWindowDimensions,
 } from "react-native";
 
 import { useAuth } from "../contexts/AuthContext";
@@ -26,6 +26,19 @@ type UsuarioPedido = {
   email?: string;
 };
 
+type ProductoPedido = {
+  nombre?: string;
+  titulo?: string;
+  precio?: number;
+};
+
+type DetallePedido = {
+  cantidad?: number;
+  precioUnitario?: number;
+  subtotal?: number;
+  producto?: ProductoPedido;
+};
+
 type Pedido = {
   idPedido: number;
   estado?: string;
@@ -35,6 +48,7 @@ type Pedido = {
   fechaCreacion?: string;
   created_at?: string;
   usuario?: UsuarioPedido;
+  detalles?: DetallePedido[];
 };
 
 type PedidosResponse = {
@@ -43,6 +57,7 @@ type PedidosResponse = {
 
 type NotificationItem = {
   id: string;
+  idPedido: number;
   tipo: "pedido" | "qr" | "estado";
   titulo: string;
   mensaje: string;
@@ -89,11 +104,13 @@ function obtenerNombreCliente(usuario?: UsuarioPedido) {
   return nombreCompleto || usuario.correo || usuario.email || "Cliente";
 }
 
-function obtenerFechaPedido(pedido: Pedido) {
+function obtenerFechaPedido(pedido?: Pedido | null) {
+  if (!pedido) return "";
   return pedido.fechaCreacion || pedido.created_at || "";
 }
 
-function obtenerTotalPedido(pedido: Pedido) {
+function obtenerTotalPedido(pedido?: Pedido | null) {
+  if (!pedido) return 0;
   return Number(pedido.total || pedido.montoTotal || 0);
 }
 
@@ -108,6 +125,16 @@ function formatearEstado(estado?: string) {
   if (estadoLower === "cancelado") return "Cancelado";
 
   return estado;
+}
+
+function formatearPago(tipoPago?: string) {
+  const tipo = String(tipoPago || "").toLowerCase();
+
+  if (tipo.includes("qr")) return "Pago QR";
+  if (tipo.includes("contra")) return "Contra entrega";
+  if (tipo.includes("tarjeta")) return "Tarjeta";
+
+  return tipoPago || "No definido";
 }
 
 function getStoredJson<T>(key: string, fallback: T): T {
@@ -128,14 +155,18 @@ function setStoredJson<T>(key: string, value: T) {
 }
 
 export default function NotificationsButton() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const { width } = useWindowDimensions();
 
   const isMobile = width < 768;
 
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showPedidoDetalle, setShowPedidoDetalle] = useState(false);
+  const [selectedPedido, setSelectedPedido] = useState<Pedido | null>(null);
+
   const [loading, setLoading] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [readIds, setReadIds] = useState<string[]>([]);
 
   const activeColor = "#7C3AED";
@@ -160,6 +191,7 @@ export default function NotificationsButton() {
     );
 
     const pedidosData = response.pedidos || [];
+    setPedidos(pedidosData);
 
     const notificaciones = pedidosData
       .slice()
@@ -177,6 +209,7 @@ export default function NotificationsButton() {
         const lista: NotificationItem[] = [
           {
             id: `pedido-${pedido.idPedido}`,
+            idPedido: pedido.idPedido,
             tipo: "pedido",
             titulo: `Nuevo pedido #${pedido.idPedido}`,
             mensaje: `${cliente} hizo una compra por Bs. ${total.toFixed(2)}.`,
@@ -192,6 +225,7 @@ export default function NotificationsButton() {
         ) {
           lista.push({
             id: `qr-${pedido.idPedido}`,
+            idPedido: pedido.idPedido,
             tipo: "qr",
             titulo: `Pago QR #${pedido.idPedido}`,
             mensaje: `${cliente} realizó un pago QR por Bs. ${total.toFixed(
@@ -214,6 +248,8 @@ export default function NotificationsButton() {
     );
 
     const pedidosData = response.pedidos || [];
+    setPedidos(pedidosData);
+
     const estadosGuardados = getStoredJson<Record<string, string>>(
       STORAGE_ESTADOS_KEY,
       {},
@@ -232,6 +268,7 @@ export default function NotificationsButton() {
       if (estadoAnterior && estadoAnterior !== estadoActual) {
         nuevasNotificaciones.push({
           id: `estado-${pedido.idPedido}-${estadoActual}`,
+          idPedido: pedido.idPedido,
           tipo: "estado",
           titulo: `Pedido #${pedido.idPedido}`,
           mensaje: `Tu pedido cambió de "${formatearEstado(
@@ -254,6 +291,8 @@ export default function NotificationsButton() {
   };
 
   const cargarNotificaciones = async (mostrarCarga = false) => {
+    if (!user) return;
+
     try {
       if (mostrarCarga) setLoading(true);
 
@@ -269,7 +308,21 @@ export default function NotificationsButton() {
     }
   };
 
+  const abrirPedido = (item: NotificationItem) => {
+    marcarLeida(item.id);
+
+    const pedido = pedidos.find((p) => p.idPedido === item.idPedido);
+
+    if (!pedido) return;
+
+    setSelectedPedido(pedido);
+    setShowNotifications(false);
+    setShowPedidoDetalle(true);
+  };
+
   useEffect(() => {
+    if (!user) return;
+
     cargarLeidas();
     cargarNotificaciones(true);
 
@@ -278,11 +331,15 @@ export default function NotificationsButton() {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [isAdmin]);
+  }, [isAdmin, user]);
 
   const unreadCount = useMemo(() => {
     return notifications.filter((item) => !readIds.includes(item.id)).length;
   }, [notifications, readIds]);
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <>
@@ -294,7 +351,7 @@ export default function NotificationsButton() {
         className={
           isMobile
             ? "absolute right-4 top-4 z-[999] w-12 h-12 rounded-full bg-white items-center justify-center border border-border"
-            : "absolute right-[245px] top-[26px] z-[999] w-11 h-11 items-center justify-center rounded-full hover:bg-primary/10"
+            : "absolute right-[190px] top-[13px] z-[999] w-11 h-11 items-center justify-center rounded-full hover:bg-primary/10"
         }
         style={
           isMobile
@@ -406,7 +463,7 @@ export default function NotificationsButton() {
                     return (
                       <TouchableOpacity
                         key={item.id}
-                        onPress={() => marcarLeida(item.id)}
+                        onPress={() => abrirPedido(item)}
                         className={`mb-5 rounded-2xl border px-6 py-5 ${
                           isRead
                             ? "border-border bg-white"
@@ -458,6 +515,120 @@ export default function NotificationsButton() {
                 )}
               </ScrollView>
             )}
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showPedidoDetalle}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowPedidoDetalle(false)}
+      >
+        <View className="flex-1 bg-black/40 justify-center items-center px-4">
+          <View className="w-full max-w-[560px] bg-white rounded-3xl p-6">
+            <View className="flex-row items-center justify-between mb-5">
+              <ThemedText className="text-2xl font-black text-[#070b3f]">
+                Pedido #{selectedPedido?.idPedido}
+              </ThemedText>
+
+              <TouchableOpacity
+                onPress={() => setShowPedidoDetalle(false)}
+                className="w-12 h-12 rounded-full bg-secondary items-center justify-center"
+              >
+                <Ionicons name="close" size={26} color="#070b3f" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View className="rounded-2xl border border-border p-4 mb-3">
+                <ThemedText className="text-sm text-muted-foreground">
+                  Cliente
+                </ThemedText>
+                <ThemedText className="mt-1 text-lg font-bold text-[#070b3f]">
+                  {obtenerNombreCliente(selectedPedido?.usuario)}
+                </ThemedText>
+              </View>
+
+              <View className="rounded-2xl border border-border p-4 mb-3">
+                <ThemedText className="text-sm text-muted-foreground">
+                  Estado
+                </ThemedText>
+                <ThemedText className="mt-1 text-lg font-bold text-[#070b3f]">
+                  {formatearEstado(selectedPedido?.estado)}
+                </ThemedText>
+              </View>
+
+              <View className="rounded-2xl border border-border p-4 mb-3">
+                <ThemedText className="text-sm text-muted-foreground">
+                  Tipo de pago
+                </ThemedText>
+                <ThemedText className="mt-1 text-lg font-bold text-[#070b3f]">
+                  {formatearPago(selectedPedido?.tipoPago)}
+                </ThemedText>
+              </View>
+
+              <View className="rounded-2xl border border-border p-4 mb-3">
+                <ThemedText className="text-sm text-muted-foreground">
+                  Total
+                </ThemedText>
+                <ThemedText className="mt-1 text-xl font-black text-primary">
+                  Bs. {obtenerTotalPedido(selectedPedido).toFixed(2)}
+                </ThemedText>
+              </View>
+
+              <View className="rounded-2xl border border-border p-4 mb-3">
+                <ThemedText className="text-sm text-muted-foreground">
+                  Fecha
+                </ThemedText>
+                <ThemedText className="mt-1 text-lg font-bold text-[#070b3f]">
+                  {tiempoTranscurrido(obtenerFechaPedido(selectedPedido))}
+                </ThemedText>
+              </View>
+
+              {selectedPedido?.detalles && selectedPedido.detalles.length > 0 && (
+                <View className="rounded-2xl border border-border p-4 mb-5">
+                  <ThemedText className="text-sm text-muted-foreground mb-3">
+                    Productos
+                  </ThemedText>
+
+                  {selectedPedido.detalles.map((detalle, index) => (
+                    <View
+                      key={index}
+                      className="border-b border-border py-3 last:border-b-0"
+                    >
+                      <ThemedText className="font-bold text-[#070b3f]">
+                        {detalle.producto?.nombre ||
+                          detalle.producto?.titulo ||
+                          "Producto"}
+                      </ThemedText>
+
+                      <ThemedText className="mt-1 text-sm text-muted-foreground">
+                        Cantidad: {detalle.cantidad || 1}
+                      </ThemedText>
+
+                      <ThemedText className="mt-1 text-sm text-muted-foreground">
+                        Subtotal: Bs.{" "}
+                        {Number(
+                          detalle.subtotal ||
+                            (detalle.precioUnitario || 0) *
+                              (detalle.cantidad || 1),
+                        ).toFixed(2)}
+                      </ThemedText>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              <TouchableOpacity
+                onPress={() => setShowPedidoDetalle(false)}
+                className="h-14 rounded-2xl bg-primary items-center justify-center mt-2"
+              >
+                <ThemedText className="text-white font-black">
+                  Cerrar detalle
+                </ThemedText>
+              </TouchableOpacity>
+            </ScrollView>
           </View>
         </View>
       </Modal>
