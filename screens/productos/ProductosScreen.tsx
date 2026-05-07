@@ -256,7 +256,7 @@ export default function ProductosScreen() {
                   data={productosFiltrados}
                   keyExtractor={(item) => String(item.idProducto)}
                   scrollEnabled={false}
-                  ItemSeparatorComponent={() => <View className="h-4" />}
+                  ItemSeparatorComponent={() => <View className="h-6" />}
                   initialNumToRender={6}
                   maxToRenderPerBatch={6}
                   windowSize={5}
