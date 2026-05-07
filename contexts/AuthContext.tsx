@@ -8,6 +8,7 @@ import {
 } from "react";
 import { httpClient } from "../http/httpClient";
 import { clearSession, saveToken } from "../storage/secureStorage";
+import { useCartStore } from "../store/cartStore";
 
 export type Usuario = {
   nombreUsuario: string;
@@ -31,6 +32,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<Usuario | null>(null);
   const [loading, setLoading] = useState(true);
+  const clearCart = useCartStore((state) => state.clearCart);
 
   // Intenta cargar el perfil desde el servidor si existe sesión previa
   useEffect(() => {
@@ -62,6 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // ignorar errores de red
     }
     await clearSession();
+    clearCart();
     setUser(null);
   };
 
