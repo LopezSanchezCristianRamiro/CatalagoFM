@@ -11,10 +11,11 @@ import { httpClient } from "../../../http/httpClient";
 WebBrowser.maybeCompleteAuthSession();
 
 const WEB_CLIENT_ID =
-  "602641734404-9mifa360nnavbalbflnvmm6btinbt6bp.apps.googleusercontent.com";
+  "602641734404-vd69bd1kl2pdasrkf30930a968b7b2il.apps.googleusercontent.com";
 
-const redirectUri = AuthSession.makeRedirectUri(); // en web devolverá http://localhost:8081 o el de producción
-
+const redirectUri = AuthSession.makeRedirectUri({
+  path: "google-callback",
+});
 interface GoogleAuthState {
   loading: boolean;
   showPhoneModal: boolean;
@@ -110,7 +111,9 @@ export function useGoogleAuth() {
       googleData: null,
     }));
     try {
-      await promptAsync();
+      await promptAsync({
+        windowFeatures: { width: 600, height: 700 },
+      });
     } catch (error: any) {
       Toast.show({
         type: "error",
