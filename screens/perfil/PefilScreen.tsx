@@ -232,11 +232,21 @@ export default function PerfilScreen() {
   const renderHeader = () => (
     <View className="mb-6">
       {/* Avatar */}
-      <View className="w-24 h-24 bg-muted rounded-full items-center justify-center self-center mb-6 mt-20">
+      <View className="self-center mb-6 mt-20">
+    {user.foto ? (
+      <Image
+        source={{ uri: user.foto }}
+        style={{ width: 96, height: 96, borderRadius: 48 }}
+        contentFit="cover"
+      />
+    ) : (
+      <View className="w-24 h-24 bg-muted rounded-full items-center justify-center">
         <ThemedText className="text-3xl font-bold text-muted-foreground">
           {user.nombres?.charAt(0)?.toUpperCase() ?? "U"}
         </ThemedText>
       </View>
+    )}
+  </View>
 
       <ThemedText className="text-2xl font-bold text-center mb-2">
         {user.nombres}
