@@ -2,6 +2,7 @@
 import { Image } from "expo-image";
 import React from "react";
 import { ActivityIndicator, TouchableOpacity } from "react-native";
+import googleLogo from "../../../assets/images/google-logo.png";
 import { ThemedText } from "../../../components/ThemedText";
 import { useGoogleAuth } from "../hooks/useGoogleAuth";
 import { GooglePhoneModal } from "./GooglePhoneModal";
@@ -30,9 +31,7 @@ export function GoogleSignInButton() {
         ) : (
           <>
             <Image
-              source={{
-                uri: "https://developers.google.com/identity/images/g-logo.png",
-              }}
+              source={googleLogo}
               style={{ width: 20, height: 20 }}
               resizeMode="contain"
             />
