@@ -1,7 +1,9 @@
 // components/CustomTabBar.tsx
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import { Image } from "expo-image";
 import { TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useAuth } from "../contexts/AuthContext";
 import { useCartAnimation } from "../screens/catalogo/components/CartAnimationContext";
 import { CartBadge } from "./CartBadge";
 import { ThemedText } from "./ThemedText";
@@ -18,6 +20,7 @@ export function CustomTabBar({
   navigation,
   isAdmin,
 }: CustomTabBarProps) {
+  const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const { cartRef } = useCartAnimation();
   const filteredRoutes = state.routes.filter(
@@ -56,9 +59,28 @@ export function CustomTabBar({
 
           const iconColor = isFocused ? activeColor : inactiveColor;
 
-          const icon = options.tabBarIcon
-            ? (options.tabBarIcon as any)({ color: iconColor, size: 24 })
-            : null;
+          const isPerfilRoute = route.name === "perfil";
+          const icon = isPerfilRoute
+            ? user?.foto
+              ? <Image
+                  source={{ uri: user.foto }}
+                  style={{ width: 24, height: 24, borderRadius: 12 }}
+                  contentFit="cover"
+                />
+              : user
+                ? <View style={{
+                    width: 24, height: 24, borderRadius: 12,
+                    backgroundColor: isFocused ? "#7C3AED" : "#6B7280",
+                    alignItems: "center", justifyContent: "center"
+                  }}>
+                    <ThemedText style={{ color: "white", fontSize: 11, fontWeight: "bold" }}>
+                      {user.nombres?.charAt(0)?.toUpperCase() ?? "U"}
+                    </ThemedText>
+                  </View>
+                : options.tabBarIcon?.({ focused: isFocused, color: iconColor, size: 24 }) ?? null
+            : options.tabBarIcon
+              ? (options.tabBarIcon as any)({ focused: isFocused, color: iconColor, size: 24 })
+              : null;
 
           const label =
             typeof options.tabBarLabel === "function"

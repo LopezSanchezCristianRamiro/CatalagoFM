@@ -17,6 +17,7 @@ export type Usuario = {
   correo: string;
   rol: string;
   telefono: string; 
+  foto: string | null;
 };
 
 interface AuthContextType {
@@ -26,10 +27,15 @@ interface AuthContextType {
   login: (token: string) => Promise<void>;
   logout: () => Promise<void>;
 }
+updateProfile: (data: { nombre?: string; telefono?: string }) => Promise<void>;
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const updateProfile = async (data: { nombre?: string; telefono?: string }) => {
+    const res = await httpClient.putAuth<{ user: Usuario }>("/api/user/profile", data);
+    setUser(res.user);
+  };
   const [user, setUser] = useState<Usuario | null>(null);
   const [loading, setLoading] = useState(true);
   const clearCart = useCartStore((state) => state.clearCart);

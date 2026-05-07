@@ -12,8 +12,9 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useResponsive } from "../../hooks/useResponsive";
 
 export default function TabsLayout() {
-  const { loading, isAdmin } = useAuth();
+  const { loading, isAdmin, user } = useAuth();
   const { isDesktop } = useResponsive();
+  
 
   if (loading) {
     return (
@@ -84,10 +85,7 @@ export default function TabsLayout() {
         <Tabs.Screen
           name="perfil"
           options={{
-            tabBarLabel: "Perfil",
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="person-outline" size={size} color={color} />
-            ),
+            tabBarLabel: user?.nombres?.split(" ")[0] ?? "Perfil",
           }}
         />
 

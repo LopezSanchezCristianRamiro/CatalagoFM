@@ -11,6 +11,7 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
+import { useAuth } from "../contexts/AuthContext";
 import { httpClient } from "../http/httpClient";
 import { useCartAnimation } from "../screens/catalogo/components/CartAnimationContext";
 import { useCartStore } from "../store/cartStore";
@@ -157,7 +158,7 @@ export function Navbar({ isAdmin }: NavbarProps) {
 
   const activeColor = "#7C3AED";
   const inactiveColor = "#6B7280";
-
+  const { user } = useAuth();
   const filteredCenter = CENTER_ROUTES.filter(
     (r) => !r.adminOnly || isAdmin,
   );
@@ -329,24 +330,31 @@ export function Navbar({ isAdmin }: NavbarProps) {
 
           <TouchableOpacity
             onPress={() => router.push("/(tabs)/perfil")}
-            className={`flex-row items-center pl-4 pr-2 py-1.5 rounded-full border border-border ${
+            className={`p-1.5 rounded-full border border-border ${
               pathname?.includes("perfil")
                 ? "bg-primary/10 border-primary/20"
                 : "bg-secondary/50"
             }`}
           >
-            <Text
-              className={`mr-2 text-sm font-bold ${
-                pathname?.includes("perfil")
-                  ? "text-primary"
-                  : "text-foreground"
-              }`}
-            >
-              Perfil
-            </Text>
-
-            <View className="bg-primary/20 rounded-full p-1">
-              <Ionicons name="person" size={18} color={activeColor} />
+            <View className="rounded-full overflow-hidden w-8 h-8">
+              {user?.foto ? (
+                <Image
+                  source={{ uri: user.foto }}
+                  style={{ width: 32, height: 32 }}
+                  contentFit="cover"
+                  cachePolicy="none"
+                />
+              ) : user ? (
+                <View className="w-8 h-8 bg-primary/20 rounded-full items-center justify-center">
+                  <Text className="text-primary font-bold text-sm">
+                    {user.nombres?.charAt(0)?.toUpperCase() ?? "U"}
+                  </Text>
+                </View>
+              ) : (
+                <View className="w-8 h-8 bg-secondary rounded-full items-center justify-center">
+                  <Ionicons name="person" size={18} color={activeColor} />
+                </View>
+              )}
             </View>
           </TouchableOpacity>
         </View>
