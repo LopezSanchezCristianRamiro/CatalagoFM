@@ -58,15 +58,14 @@ type PedidosResponse = {
 type NotificationItem = {
   id: string;
   idPedido: number;
-  tipo: "pedido" | "qr" | "estado";
+  tipo: "pedido" | "qr";
   titulo: string;
   mensaje: string;
   tiempo: string;
   fecha: string;
 };
 
-const STORAGE_READ_KEY = "notifications_read";
-const STORAGE_ESTADOS_KEY = "cliente_pedidos_estados";
+const STORAGE_READ_KEY = "admin_notifications_read";
 
 function tiempoTranscurrido(fecha?: string) {
   if (!fecha) return "Sin fecha";
@@ -184,118 +183,65 @@ export default function NotificationsButton() {
     guardarLeidas([...readIds, id]);
   };
 
-  const cargarAdmin = async () => {
-    const response = await httpClient.getAuth<PedidosResponse>(
-      "/api/admin/pedidos",
-    );
-
-    const pedidosData = response.pedidos || [];
-    setPedidos(pedidosData);
-
-    const notificaciones = pedidosData
-      .slice()
-      .sort((a, b) => {
-        const fechaA = new Date(obtenerFechaPedido(a)).getTime();
-        const fechaB = new Date(obtenerFechaPedido(b)).getTime();
-        return fechaB - fechaA;
-      })
-      .flatMap((pedido) => {
-        const fecha = obtenerFechaPedido(pedido);
-        const cliente = obtenerNombreCliente(pedido.usuario);
-        const total = obtenerTotalPedido(pedido);
-
-        const lista: NotificationItem[] = [
-          {
-            id: `pedido-${pedido.idPedido}`,
-            idPedido: pedido.idPedido,
-            tipo: "pedido",
-            titulo: `Nuevo pedido #${pedido.idPedido}`,
-            mensaje: `${cliente} hizo una compra por Bs. ${total.toFixed(2)}.`,
-            tiempo: tiempoTranscurrido(fecha),
-            fecha,
-          },
-        ];
-
-        if (String(pedido.tipoPago || "").toLowerCase().includes("qr")) {
-          lista.push({
-            id: `qr-${pedido.idPedido}`,
-            idPedido: pedido.idPedido,
-            tipo: "qr",
-            titulo: `Pago QR #${pedido.idPedido}`,
-            mensaje: `${cliente} realizó un pago QR por Bs. ${total.toFixed(
-              2,
-            )}.`,
-            tiempo: tiempoTranscurrido(fecha),
-            fecha,
-          });
-        }
-
-        return lista;
-      });
-
-    setNotifications(notificaciones);
-  };
-
-  const cargarCliente = async () => {
-    const response = await httpClient.getAuth<PedidosResponse>(
-      "/api/mis-pedidos",
-    );
-
-    const pedidosData = response.pedidos || [];
-    setPedidos(pedidosData);
-
-    const estadosGuardados = getStoredJson<Record<string, string>>(
-      STORAGE_ESTADOS_KEY,
-      {},
-    );
-
-    const nuevosEstados: Record<string, string> = {};
-    const nuevasNotificaciones: NotificationItem[] = [];
-
-    pedidosData.forEach((pedido) => {
-      const id = String(pedido.idPedido);
-      const estadoActual = pedido.estado || "No definido";
-      const estadoAnterior = estadosGuardados[id];
-
-      nuevosEstados[id] = estadoActual;
-
-      if (estadoAnterior && estadoAnterior !== estadoActual) {
-        nuevasNotificaciones.push({
-          id: `estado-${pedido.idPedido}-${estadoActual}`,
-          idPedido: pedido.idPedido,
-          tipo: "estado",
-          titulo: `Pedido #${pedido.idPedido}`,
-          mensaje: `Tu pedido cambió de "${formatearEstado(
-            estadoAnterior,
-          )}" a "${formatearEstado(estadoActual)}".`,
-          tiempo: tiempoTranscurrido(obtenerFechaPedido(pedido)),
-          fecha: obtenerFechaPedido(pedido),
-        });
-      }
-    });
-
-    setStoredJson(STORAGE_ESTADOS_KEY, nuevosEstados);
-
-    setNotifications((prev) => {
-      const ids = new Set(prev.map((n) => n.id));
-      const filtradas = nuevasNotificaciones.filter((n) => !ids.has(n.id));
-      return [...filtradas, ...prev];
-    });
-  };
-
-  const cargarNotificaciones = async (mostrarCarga = false) => {
-    if (!user) return;
+  const cargarAdmin = async (mostrarCarga = false) => {
+    if (!user || !isAdmin) return;
 
     try {
       if (mostrarCarga) setLoading(true);
 
-      if (isAdmin) {
-        await cargarAdmin();
-      } else {
-        await cargarCliente();
-      }
+      const response = await httpClient.getAuth<PedidosResponse>(
+        "/api/admin/pedidos",
+      );
+
+      const pedidosData = response.pedidos || [];
+      setPedidos(pedidosData);
+
+      const notificaciones = pedidosData
+        .slice()
+        .sort((a, b) => {
+          const fechaA = new Date(obtenerFechaPedido(a)).getTime();
+          const fechaB = new Date(obtenerFechaPedido(b)).getTime();
+          return fechaB - fechaA;
+        })
+        .flatMap((pedido) => {
+          const fecha = obtenerFechaPedido(pedido);
+          const cliente = obtenerNombreCliente(pedido.usuario);
+          const total = obtenerTotalPedido(pedido);
+
+          const lista: NotificationItem[] = [
+            {
+              id: `pedido-${pedido.idPedido}`,
+              idPedido: pedido.idPedido,
+              tipo: "pedido",
+              titulo: `Nuevo pedido #${pedido.idPedido}`,
+              mensaje: `${cliente} hizo una compra por Bs. ${total.toFixed(
+                2,
+              )}.`,
+              tiempo: tiempoTranscurrido(fecha),
+              fecha,
+            },
+          ];
+
+          if (String(pedido.tipoPago || "").toLowerCase().includes("qr")) {
+            lista.push({
+              id: `qr-${pedido.idPedido}`,
+              idPedido: pedido.idPedido,
+              tipo: "qr",
+              titulo: `Pago QR #${pedido.idPedido}`,
+              mensaje: `${cliente} realizó un pago QR por Bs. ${total.toFixed(
+                2,
+              )}.`,
+              tiempo: tiempoTranscurrido(fecha),
+              fecha,
+            });
+          }
+
+          return lista;
+        });
+
+      setNotifications(notificaciones);
     } catch (error) {
-      console.error("Error notificaciones", error);
+      console.error("Error notificaciones admin", error);
     } finally {
       if (mostrarCarga) setLoading(false);
     }
@@ -313,13 +259,13 @@ export default function NotificationsButton() {
   };
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !isAdmin) return;
 
     cargarLeidas();
-    cargarNotificaciones(true);
+    cargarAdmin(true);
 
     const interval = setInterval(() => {
-      cargarNotificaciones(false);
+      cargarAdmin(false);
     }, 5000);
 
     return () => clearInterval(interval);
@@ -329,14 +275,14 @@ export default function NotificationsButton() {
     return notifications.filter((item) => !readIds.includes(item.id)).length;
   }, [notifications, readIds]);
 
-  if (!user) return null;
+  if (!user || !isAdmin) return null;
 
   return (
     <>
       <TouchableOpacity
         onPress={() => {
           setShowNotifications(true);
-          cargarNotificaciones(false);
+          cargarAdmin(false);
         }}
         className={
           isMobile
@@ -403,9 +349,7 @@ export default function NotificationsButton() {
                 </ThemedText>
 
                 <ThemedText className="mt-2 text-base text-muted-foreground">
-                  {isAdmin
-                    ? "Pedidos recientes y pagos QR"
-                    : "Actualizaciones de tus pedidos"}
+                  Pedidos recientes y pagos QR
                 </ThemedText>
               </View>
 
