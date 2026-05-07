@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "catalogofm",
+    "scheme": "com.metasoft.catalogo",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -20,7 +20,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.catalogo_FM"
+      "package": "com.metasoft.catalogo"
     },
     "web": {
       "output": "static",
@@ -41,7 +41,14 @@
           }
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "androidClientId": "602641734404-oak91kbdn19ftmdkmdod1kcqjnj9o18b.apps.googleusercontent.com",
+          "iosUrlScheme": "com.googleusercontent.apps.602641734404-oak91kbdn19ftmdkmdod1kcqjnj9o18b"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

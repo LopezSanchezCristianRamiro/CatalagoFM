@@ -188,19 +188,18 @@ export default function LoginScreen() {
                 </ThemedText>
               </ThemedText>
             </TouchableOpacity>
+            {/* Botón de prueba Google */}
+            <View className="flex-row items-center my-6">
+              <View className="flex-1 h-px bg-border" />
+              <ThemedText className="mx-4 text-sm text-muted-foreground">
+                o prueba con
+              </ThemedText>
+              <View className="flex-1 h-px bg-border" />
+            </View>
+
+            <GoogleSignInButton />
           </View>
         </View>
-
-        {/* Botón de prueba Google */}
-        <View className="flex-row items-center my-6">
-          <View className="flex-1 h-px bg-border" />
-          <ThemedText className="mx-4 text-sm text-muted-foreground">
-            o prueba con
-          </ThemedText>
-          <View className="flex-1 h-px bg-border" />
-        </View>
-
-        <GoogleSignInButton />
       </KeyboardAwareScrollView>
     </View>
   );
