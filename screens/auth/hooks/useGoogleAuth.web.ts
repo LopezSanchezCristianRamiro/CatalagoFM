@@ -13,7 +13,9 @@ WebBrowser.maybeCompleteAuthSession();
 const WEB_CLIENT_ID =
   "602641734404-vd69bd1kl2pdasrkf30930a968b7b2il.apps.googleusercontent.com";
 
-const redirectUri = AuthSession.makeRedirectUri();
+const redirectUri = AuthSession.makeRedirectUri({
+  path: "google-callback",
+});
 interface GoogleAuthState {
   loading: boolean;
   showPhoneModal: boolean;
