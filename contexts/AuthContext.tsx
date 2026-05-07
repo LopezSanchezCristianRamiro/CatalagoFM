@@ -15,6 +15,7 @@ export type Usuario = {
   apellido: string;
   correo: string;
   rol: string;
+  telefono: string; 
 };
 
 interface AuthContextType {
