@@ -12,7 +12,7 @@ import "../global.css";
 export default function RootLayout() {
   GoogleSignin.configure({
     webClientId:
-      "602641734404-9mifa360nnavbalbflnvmm6btinbt6bp.apps.googleusercontent.com",
+      "602641734404-vd69bd1kl2pdasrkf30930a968b7b2il.apps.googleusercontent.com",
   });
   return (
     <CartAnimationProvider>
