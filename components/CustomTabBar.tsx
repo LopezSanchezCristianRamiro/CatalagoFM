@@ -62,22 +62,34 @@ export function CustomTabBar({
           const isPerfilRoute = route.name === "perfil";
           const icon = isPerfilRoute
             ? user?.foto
-              ? <Image
+              ? (
+                <Image
                   source={{ uri: user.foto }}
-                  style={{ width: 24, height: 24, borderRadius: 12 }}
+                  style={{ width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: isFocused ? "#7C3AED" : "#E5E7EB" }}
                   contentFit="cover"
                 />
+              )
               : user
-                ? <View style={{
-                    width: 24, height: 24, borderRadius: 12,
-                    backgroundColor: isFocused ? "#7C3AED" : "#6B7280",
-                    alignItems: "center", justifyContent: "center"
+                ? (
+                  <View style={{
+                    width: 26, height: 26, borderRadius: 13,
+                    backgroundColor: isFocused ? "#7C3AED" : "#E5E7EB",
+                    alignItems: "center", justifyContent: "center",
+                    borderWidth: 1.5,
+                    borderColor: isFocused ? "#7C3AED" : "#D1D5DB",
                   }}>
-                    <ThemedText style={{ color: "white", fontSize: 11, fontWeight: "bold" }}>
+                    <ThemedText style={{
+                      color: isFocused ? "white" : "#6B7280",
+                      fontSize: 11, fontWeight: "bold", lineHeight: 14,
+                    }}>
                       {user.nombres?.charAt(0)?.toUpperCase() ?? "U"}
                     </ThemedText>
                   </View>
-                : options.tabBarIcon?.({ focused: isFocused, color: iconColor, size: 24 }) ?? null
+                )
+                : (
+                  // No logueado — usa el ícono del _layout
+                  options.tabBarIcon?.({ focused: isFocused, color: iconColor, size: 24 }) ?? null
+                )
             : options.tabBarIcon
               ? (options.tabBarIcon as any)({ focused: isFocused, color: iconColor, size: 24 })
               : null;
