@@ -60,6 +60,13 @@ export function useGoogleAuth() {
         text2: response.error?.message,
       });
       setState((prev) => ({ ...prev, loading: false }));
+    } else if (response?.type === "cancel" || response?.type === "dismiss") {
+      // El usuario cerró el popup sin completar la autenticación
+      Toast.show({
+        type: "info",
+        text1: "Autenticación cancelada",
+      });
+      setState((prev) => ({ ...prev, loading: false }));
     }
   }, [response]);
 
