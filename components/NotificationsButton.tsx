@@ -66,6 +66,8 @@ type NotificationItem = {
 };
 
 const STORAGE_READ_KEY = "admin_notifications_read";
+const PRIMARY = "#7C3AED";
+const DARK = "#070B3F";
 
 function tiempoTranscurrido(fecha?: string) {
   if (!fecha) return "Sin fecha";
@@ -154,7 +156,7 @@ function setStoredJson<T>(key: string, value: T) {
 
 export default function NotificationsButton() {
   const { isAdmin, user } = useAuth();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
 
   const isMobile = width < 768;
 
@@ -167,7 +169,8 @@ export default function NotificationsButton() {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [readIds, setReadIds] = useState<string[]>([]);
 
-  const activeColor = "#7C3AED";
+  const modalHeight = Math.min(height * 0.88, isMobile ? 690 : 760);
+  const detailHeight = Math.min(height * 0.9, isMobile ? 680 : 720);
 
   const cargarLeidas = () => {
     setReadIds(getStoredJson<string[]>(STORAGE_READ_KEY, []));
@@ -181,6 +184,11 @@ export default function NotificationsButton() {
   const marcarLeida = (id: string) => {
     if (readIds.includes(id)) return;
     guardarLeidas([...readIds, id]);
+  };
+
+  const marcarTodasLeidas = () => {
+    const ids = notifications.map((item) => item.id);
+    guardarLeidas(ids);
   };
 
   const cargarAdmin = async (mostrarCarga = false) => {
@@ -280,22 +288,23 @@ export default function NotificationsButton() {
   return (
     <>
       <TouchableOpacity
+        activeOpacity={0.85}
         onPress={() => {
           setShowNotifications(true);
           cargarAdmin(false);
         }}
         className={
           isMobile
-            ? "absolute right-4 top-4 z-[999] w-12 h-12 rounded-full bg-white items-center justify-center border border-border"
+            ? "absolute right-4 top-4 z-[999] w-12 h-12 rounded-full bg-white items-center justify-center border border-slate-200"
             : "absolute right-[190px] top-[10px] z-[999] w-11 h-11 items-center justify-center rounded-full hover:bg-primary/10"
         }
         style={
           isMobile
             ? {
                 shadowColor: "#000",
-                shadowOpacity: 0.25,
-                shadowRadius: 10,
-                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.22,
+                shadowRadius: 12,
+                shadowOffset: { width: 0, height: 5 },
                 elevation: 8,
               }
             : undefined
@@ -304,7 +313,7 @@ export default function NotificationsButton() {
         <Ionicons
           name="notifications-outline"
           size={isMobile ? 25 : 24}
-          color={isMobile ? activeColor : "#050816"}
+          color={isMobile ? PRIMARY : "#050816"}
         />
 
         {unreadCount > 0 && (
@@ -322,7 +331,7 @@ export default function NotificationsButton() {
                   : "text-white text-[8px] font-black"
               }
             >
-              {unreadCount}
+              {unreadCount > 99 ? "99+" : unreadCount}
             </Text>
           </View>
         )}
@@ -334,124 +343,225 @@ export default function NotificationsButton() {
         animationType="fade"
         onRequestClose={() => setShowNotifications(false)}
       >
-        <View className="flex-1 bg-black/40 justify-center items-center px-3">
+        <View className="flex-1 bg-black/50 justify-center items-center px-3">
           <View
             className={
               isMobile
-                ? "w-full max-w-[360px] max-h-[88%] bg-white rounded-3xl overflow-hidden"
-                : "w-full max-w-[900px] max-h-[86%] bg-white rounded-3xl overflow-hidden"
+                ? "w-full max-w-[390px] bg-white rounded-[32px] overflow-hidden"
+                : "w-full max-w-[760px] bg-white rounded-[34px] overflow-hidden"
             }
+            style={{
+              height: modalHeight,
+              shadowColor: "#000",
+              shadowOpacity: 0.25,
+              shadowRadius: 24,
+              shadowOffset: { width: 0, height: 12 },
+              elevation: 12,
+            }}
           >
-            <View className="px-7 py-6 border-b border-border flex-row items-start justify-between">
-              <View className="flex-1 pr-4">
-                <ThemedText className="text-2xl font-black text-[#070b3f]">
-                  Notificaciones
-                </ThemedText>
+            <View className="px-5 pt-5 pb-4 bg-white border-b border-slate-100">
+              <View className="flex-row items-start justify-between">
+                <View className="flex-1 pr-3">
+                  <View className="flex-row items-center gap-2">
+                    <View className="w-11 h-11 rounded-2xl bg-primary/10 items-center justify-center">
+                      <Ionicons
+                        name="notifications"
+                        size={23}
+                        color={PRIMARY}
+                      />
+                    </View>
 
-                <ThemedText className="mt-2 text-base text-muted-foreground">
-                  Pedidos recientes y pagos QR
-                </ThemedText>
+                    <View className="flex-1">
+                      <ThemedText
+                        className={
+                          isMobile
+                            ? "text-xl font-black text-[#070B3F]"
+                            : "text-2xl font-black text-[#070B3F]"
+                        }
+                      >
+                        Notificaciones
+                      </ThemedText>
+
+                      <ThemedText className="text-xs text-slate-500 mt-0.5">
+                        {unreadCount > 0
+                          ? `${unreadCount} sin leer`
+                          : "Todo al día"}
+                      </ThemedText>
+                    </View>
+                  </View>
+                </View>
+
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={() => setShowNotifications(false)}
+                  className="w-12 h-12 rounded-full bg-slate-100 items-center justify-center"
+                >
+                  <Ionicons name="close" size={27} color={DARK} />
+                </TouchableOpacity>
               </View>
 
-              <TouchableOpacity
-                onPress={() => setShowNotifications(false)}
-                className="w-14 h-14 rounded-full bg-secondary items-center justify-center"
-              >
-                <Ionicons name="close" size={30} color="#070b3f" />
-              </TouchableOpacity>
+              <View className="flex-row items-center justify-between mt-5">
+                <View className="px-4 py-2 rounded-full bg-primary/10">
+                  <ThemedText className="text-primary text-xs font-black">
+                    Pedidos y pagos QR
+                  </ThemedText>
+                </View>
+
+                {notifications.length > 0 && (
+                  <TouchableOpacity
+                    activeOpacity={0.85}
+                    onPress={marcarTodasLeidas}
+                    className="px-4 py-2 rounded-full bg-slate-100"
+                  >
+                    <ThemedText className="text-slate-600 text-xs font-black">
+                      Marcar leídas
+                    </ThemedText>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
 
             {loading ? (
-              <View className="items-center justify-center py-16">
-                <ActivityIndicator color={activeColor} />
-                <ThemedText className="mt-3 text-muted-foreground">
+              <View className="flex-1 items-center justify-center px-6">
+                <ActivityIndicator color={PRIMARY} size="large" />
+                <ThemedText className="mt-4 text-slate-500 text-center">
                   Cargando notificaciones...
                 </ThemedText>
               </View>
             ) : (
               <ScrollView
-                className="px-6 py-6"
+                className="flex-1 bg-slate-50"
                 showsVerticalScrollIndicator
-                contentContainerStyle={{ paddingBottom: 30 }}
+                contentContainerStyle={{
+                  paddingHorizontal: isMobile ? 14 : 22,
+                  paddingTop: 18,
+                  paddingBottom: 26,
+                }}
               >
                 {notifications.length === 0 ? (
-                  <View className="items-center py-16">
-                    <Ionicons
-                      name="notifications-off-outline"
-                      size={48}
-                      color="#9CA3AF"
-                    />
-                    <ThemedText className="mt-3 text-muted-foreground text-center">
-                      No tienes notificaciones.
+                  <View className="items-center justify-center py-20 px-6">
+                    <View className="w-20 h-20 rounded-full bg-slate-100 items-center justify-center">
+                      <Ionicons
+                        name="notifications-off-outline"
+                        size={42}
+                        color="#94A3B8"
+                      />
+                    </View>
+
+                    <ThemedText className="mt-4 text-lg font-black text-[#070B3F] text-center">
+                      Sin notificaciones
+                    </ThemedText>
+
+                    <ThemedText className="mt-2 text-slate-500 text-center">
+                      Cuando llegue un nuevo pedido aparecerá aquí.
                     </ThemedText>
                   </View>
                 ) : (
                   notifications.map((item) => {
                     const isRead = readIds.includes(item.id);
+                    const isQr = item.tipo === "qr";
 
                     return (
                       <TouchableOpacity
+                        activeOpacity={0.88}
                         key={item.id}
                         onPress={() => abrirPedido(item)}
-                        className={`mb-4 rounded-2xl border px-5 py-5 ${
+                        className={`mb-4 rounded-[28px] border bg-white overflow-hidden ${
                           isRead
-                            ? "border-border bg-white opacity-70"
-                            : "border-primary/40 bg-primary/5"
+                            ? "border-slate-100 opacity-75"
+                            : "border-primary/25"
                         }`}
+                        style={{
+                          shadowColor: "#000",
+                          shadowOpacity: isRead ? 0.04 : 0.09,
+                          shadowRadius: 14,
+                          shadowOffset: { width: 0, height: 6 },
+                          elevation: isRead ? 1 : 4,
+                        }}
                       >
-                        <View
-                          className={
-                            isMobile
-                              ? "gap-3"
-                              : "flex-row items-center justify-between"
-                          }
-                        >
-                          <View className="flex-1">
-                            <View className="flex-row items-center gap-2">
-                              {!isRead && (
-                                <View className="w-3 h-3 rounded-full bg-primary" />
-                              )}
-
-                              <ThemedText
-                                className={`text-xl font-black ${
-                                  isRead
-                                    ? "text-slate-500"
-                                    : "text-[#070b3f]"
-                                }`}
-                              >
-                                {item.titulo}
-                              </ThemedText>
+                        <View className="p-4">
+                          <View className="flex-row items-start">
+                            <View
+                              className={`w-12 h-12 rounded-2xl items-center justify-center ${
+                                isQr ? "bg-emerald-50" : "bg-primary/10"
+                              }`}
+                            >
+                              <Ionicons
+                                name={
+                                  isQr
+                                    ? "qr-code-outline"
+                                    : "bag-check-outline"
+                                }
+                                size={24}
+                                color={isQr ? "#059669" : PRIMARY}
+                              />
                             </View>
 
-                            <ThemedText
-                              className={`mt-3 text-base ${
-                                isRead
-                                  ? "text-slate-400"
-                                  : "text-muted-foreground"
-                              }`}
-                            >
-                              {item.mensaje}
-                            </ThemedText>
-                          </View>
+                            <View className="flex-1 ml-3">
+                              <View className="flex-row items-start justify-between gap-2">
+                                <View className="flex-1">
+                                  <View className="flex-row items-center gap-2">
+                                    {!isRead && (
+                                      <View className="w-2.5 h-2.5 rounded-full bg-primary" />
+                                    )}
 
-                          <View className="flex-row items-center justify-end">
-                            <ThemedText
-                              className={`mr-4 text-lg font-black ${
-                                isRead ? "text-slate-400" : "text-primary"
-                              }`}
-                            >
-                              {item.tiempo}
-                            </ThemedText>
+                                    <ThemedText
+                                      className={`font-black ${
+                                        isMobile ? "text-base" : "text-lg"
+                                      } ${
+                                        isRead
+                                          ? "text-slate-500"
+                                          : "text-[#070B3F]"
+                                      }`}
+                                    >
+                                      {item.titulo}
+                                    </ThemedText>
+                                  </View>
 
-                            <Ionicons
-                              name={
-                                item.tipo === "qr"
-                                  ? "qr-code-outline"
-                                  : "chevron-forward"
-                              }
-                              size={26}
-                              color={isRead ? "#94A3B8" : "#070b3f"}
-                            />
+                                  <ThemedText
+                                    className={`mt-2 leading-5 ${
+                                      isRead
+                                        ? "text-slate-400"
+                                        : "text-slate-600"
+                                    }`}
+                                  >
+                                    {item.mensaje}
+                                  </ThemedText>
+                                </View>
+
+                                <Ionicons
+                                  name="chevron-forward"
+                                  size={22}
+                                  color={isRead ? "#CBD5E1" : DARK}
+                                />
+                              </View>
+
+                              <View className="flex-row items-center justify-between mt-4">
+                                <View
+                                  className={`px-3 py-1.5 rounded-full ${
+                                    isQr ? "bg-emerald-50" : "bg-primary/10"
+                                  }`}
+                                >
+                                  <ThemedText
+                                    className={`text-xs font-black ${
+                                      isQr
+                                        ? "text-emerald-700"
+                                        : "text-primary"
+                                    }`}
+                                  >
+                                    {isQr ? "Pago QR" : "Pedido"}
+                                  </ThemedText>
+                                </View>
+
+                                <ThemedText
+                                  className={`text-xs font-bold ${
+                                    isRead ? "text-slate-400" : "text-primary"
+                                  }`}
+                                >
+                                  {item.tiempo}
+                                </ThemedText>
+                              </View>
+                            </View>
                           </View>
                         </View>
                       </TouchableOpacity>
@@ -470,121 +580,180 @@ export default function NotificationsButton() {
         animationType="fade"
         onRequestClose={() => setShowPedidoDetalle(false)}
       >
-        <View className="flex-1 bg-black/40 justify-center items-center px-4">
+        <View className="flex-1 bg-black/50 justify-center items-center px-3">
           <View
             className={
               isMobile
-                ? "w-full max-w-[360px] max-h-[88%] bg-white rounded-3xl p-5"
-                : "w-full max-w-[560px] max-h-[88%] bg-white rounded-3xl p-6"
+                ? "w-full max-w-[390px] bg-white rounded-[32px] overflow-hidden"
+                : "w-full max-w-[620px] bg-white rounded-[34px] overflow-hidden"
             }
+            style={{
+              height: detailHeight,
+              shadowColor: "#000",
+              shadowOpacity: 0.25,
+              shadowRadius: 24,
+              shadowOffset: { width: 0, height: 12 },
+              elevation: 12,
+            }}
           >
-            <View className="flex-row items-center justify-between mb-4">
-              <ThemedText
-                className={
-                  isMobile
-                    ? "text-xl font-black text-[#070b3f]"
-                    : "text-2xl font-black text-[#070b3f]"
-                }
-              >
-                Pedido #{selectedPedido?.idPedido}
-              </ThemedText>
+            <View className="px-5 pt-5 pb-4 border-b border-slate-100 bg-white">
+              <View className="flex-row items-start justify-between">
+                <View className="flex-1 pr-3">
+                  <ThemedText
+                    className={
+                      isMobile
+                        ? "text-2xl font-black text-[#070B3F]"
+                        : "text-3xl font-black text-[#070B3F]"
+                    }
+                  >
+                    Pedido #{selectedPedido?.idPedido}
+                  </ThemedText>
 
-              <TouchableOpacity
-                onPress={() => setShowPedidoDetalle(false)}
-                className="w-11 h-11 rounded-full bg-secondary items-center justify-center"
-              >
-                <Ionicons name="close" size={24} color="#070b3f" />
-              </TouchableOpacity>
+                  <ThemedText className="mt-1 text-slate-500">
+                    Detalle completo del pedido
+                  </ThemedText>
+                </View>
+
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={() => setShowPedidoDetalle(false)}
+                  className="w-12 h-12 rounded-full bg-slate-100 items-center justify-center"
+                >
+                  <Ionicons name="close" size={27} color={DARK} />
+                </TouchableOpacity>
+              </View>
             </View>
 
             <ScrollView
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: isMobile ? 24 : 4 }}
+              className="flex-1 bg-slate-50"
+              showsVerticalScrollIndicator
+              contentContainerStyle={{
+                paddingHorizontal: isMobile ? 14 : 22,
+                paddingTop: 18,
+                paddingBottom: 28,
+              }}
             >
-              <View className={isMobile ? "gap-3" : ""}>
-                <View className="rounded-2xl border border-border p-4">
-                  <ThemedText className="text-xs text-muted-foreground">
-                    Cliente
-                  </ThemedText>
-                  <ThemedText className="mt-1 text-base font-bold text-[#070b3f]">
-                    {obtenerNombreCliente(selectedPedido?.usuario)}
-                  </ThemedText>
+              <View className={isMobile ? "gap-3" : "gap-4"}>
+                <View className="rounded-[26px] bg-white border border-slate-100 p-5">
+                  <View className="flex-row items-center gap-3">
+                    <View className="w-11 h-11 rounded-2xl bg-primary/10 items-center justify-center">
+                      <Ionicons name="person-outline" size={22} color={PRIMARY} />
+                    </View>
+
+                    <View className="flex-1">
+                      <ThemedText className="text-xs text-slate-500">
+                        Cliente
+                      </ThemedText>
+                      <ThemedText className="mt-1 text-lg font-black text-[#070B3F]">
+                        {obtenerNombreCliente(selectedPedido?.usuario)}
+                      </ThemedText>
+                    </View>
+                  </View>
                 </View>
 
-                <View className="rounded-2xl border border-border p-4">
-                  <ThemedText className="text-xs text-muted-foreground">
-                    Estado
-                  </ThemedText>
-                  <ThemedText className="mt-1 text-base font-bold text-[#070b3f]">
-                    {formatearEstado(selectedPedido?.estado)}
-                  </ThemedText>
+                <View className="flex-row gap-3">
+                  <View className="flex-1 rounded-[26px] bg-white border border-slate-100 p-5">
+                    <ThemedText className="text-xs text-slate-500">
+                      Estado
+                    </ThemedText>
+                    <ThemedText className="mt-2 text-base font-black text-[#070B3F]">
+                      {formatearEstado(selectedPedido?.estado)}
+                    </ThemedText>
+                  </View>
+
+                  <View className="flex-1 rounded-[26px] bg-white border border-slate-100 p-5">
+                    <ThemedText className="text-xs text-slate-500">
+                      Pago
+                    </ThemedText>
+                    <ThemedText className="mt-2 text-base font-black text-[#070B3F]">
+                      {formatearPago(selectedPedido?.tipoPago)}
+                    </ThemedText>
+                  </View>
                 </View>
 
-                <View className="rounded-2xl border border-border p-4">
-                  <ThemedText className="text-xs text-muted-foreground">
-                    Tipo de pago
-                  </ThemedText>
-                  <ThemedText className="mt-1 text-base font-bold text-[#070b3f]">
-                    {formatearPago(selectedPedido?.tipoPago)}
-                  </ThemedText>
-                </View>
-
-                <View className="rounded-2xl border border-border p-4">
-                  <ThemedText className="text-xs text-muted-foreground">
+                <View className="rounded-[26px] bg-white border border-primary/20 p-5">
+                  <ThemedText className="text-xs text-slate-500">
                     Total
                   </ThemedText>
-                  <ThemedText className="mt-1 text-xl font-black text-primary">
+                  <ThemedText className="mt-2 text-3xl font-black text-primary">
                     Bs. {obtenerTotalPedido(selectedPedido).toFixed(2)}
                   </ThemedText>
                 </View>
 
-                <View className="rounded-2xl border border-border p-4">
-                  <ThemedText className="text-xs text-muted-foreground">
+                <View className="rounded-[26px] bg-white border border-slate-100 p-5">
+                  <ThemedText className="text-xs text-slate-500">
                     Fecha
                   </ThemedText>
-                  <ThemedText className="mt-1 text-base font-bold text-[#070b3f]">
+                  <ThemedText className="mt-2 text-base font-black text-[#070B3F]">
                     {tiempoTranscurrido(obtenerFechaPedido(selectedPedido))}
                   </ThemedText>
                 </View>
 
-                {selectedPedido?.detalles &&
-                  selectedPedido.detalles.length > 0 && (
-                    <View className="rounded-2xl border border-border p-4">
-                      <ThemedText className="text-xs text-muted-foreground mb-3">
-                        Productos
-                      </ThemedText>
+                <View className="rounded-[26px] bg-white border border-slate-100 p-5">
+                  <View className="flex-row items-center justify-between mb-4">
+                    <ThemedText className="text-base font-black text-[#070B3F]">
+                      Productos
+                    </ThemedText>
 
-                      {selectedPedido.detalles.map((detalle, index) => (
+                    <View className="px-3 py-1.5 rounded-full bg-slate-100">
+                      <ThemedText className="text-xs font-black text-slate-600">
+                        {selectedPedido?.detalles?.length || 0} item(s)
+                      </ThemedText>
+                    </View>
+                  </View>
+
+                  {!selectedPedido?.detalles ||
+                  selectedPedido.detalles.length === 0 ? (
+                    <View className="items-center py-8">
+                      <Ionicons
+                        name="cube-outline"
+                        size={38}
+                        color="#94A3B8"
+                      />
+                      <ThemedText className="mt-2 text-slate-500 text-center">
+                        Este pedido no tiene productos cargados.
+                      </ThemedText>
+                    </View>
+                  ) : (
+                    selectedPedido.detalles.map((detalle, index) => {
+                      const cantidad = detalle.cantidad || 1;
+                      const subtotal = Number(
+                        detalle.subtotal ||
+                          (detalle.precioUnitario || 0) * cantidad,
+                      );
+
+                      return (
                         <View
                           key={index}
-                          className="border-b border-border py-3 last:border-b-0"
+                          className="py-4 border-b border-slate-100 last:border-b-0"
                         >
-                          <ThemedText className="font-bold text-[#070b3f]">
-                            {detalle.producto?.nombre ||
-                              detalle.producto?.titulo ||
-                              "Producto"}
-                          </ThemedText>
+                          <View className="flex-row items-start justify-between gap-3">
+                            <View className="flex-1">
+                              <ThemedText className="font-black text-[#070B3F]">
+                                {detalle.producto?.nombre ||
+                                  detalle.producto?.titulo ||
+                                  "Producto"}
+                              </ThemedText>
 
-                          <ThemedText className="mt-1 text-sm text-muted-foreground">
-                            Cantidad: {detalle.cantidad || 1}
-                          </ThemedText>
+                              <ThemedText className="mt-1 text-sm text-slate-500">
+                                Cantidad: {cantidad}
+                              </ThemedText>
+                            </View>
 
-                          <ThemedText className="mt-1 text-sm text-muted-foreground">
-                            Subtotal: Bs.{" "}
-                            {Number(
-                              detalle.subtotal ||
-                                (detalle.precioUnitario || 0) *
-                                  (detalle.cantidad || 1),
-                            ).toFixed(2)}
-                          </ThemedText>
+                            <ThemedText className="font-black text-primary">
+                              Bs. {subtotal.toFixed(2)}
+                            </ThemedText>
+                          </View>
                         </View>
-                      ))}
-                    </View>
+                      );
+                    })
                   )}
+                </View>
 
                 <TouchableOpacity
+                  activeOpacity={0.9}
                   onPress={() => setShowPedidoDetalle(false)}
-                  className="h-14 rounded-2xl bg-primary items-center justify-center mt-4"
+                  className="h-14 rounded-2xl bg-primary items-center justify-center mt-2"
                 >
                   <ThemedText className="text-white font-black">
                     Cerrar detalle
