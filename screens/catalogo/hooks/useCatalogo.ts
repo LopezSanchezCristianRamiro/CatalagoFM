@@ -6,6 +6,9 @@ import {
   ProductoCatalogo,
 } from "../types/catalogo.types";
 
+const cacheProductos: Record<string, ProductoCatalogo[]> = {};
+const cacheHasMore: Record<string, boolean> = {};
+
 export function useCatalogo() {
   const [productos, setProductos] = useState<ProductoCatalogo[]>([]);
   const [promociones, setPromociones] = useState<ProductoCatalogo[]>([]);
@@ -26,8 +29,10 @@ export function useCatalogo() {
   });
   const pageRef = useRef(1);
 
-  // Mantén filtersRef sincronizado en cada render
   filtersRef.current = { searchQuery, categoriaActiva };
+
+  const getCacheKey = (sq: string, ca: number | null, p: number) =>
+    `${sq}_${ca ?? "all"}_${p}`;
 
   const fetchCategorias = async () => {
     try {
@@ -44,7 +49,7 @@ export function useCatalogo() {
   const fetchPromociones = async () => {
     try {
       const res = await httpClient.getAuth<PaginatedResponseCatalogo<ProductoCatalogo>>(
-        "/api/catalogo?soloPromociones=1&limit=1000",
+        "/api/catalogo?soloPromociones=1&limit=12",
         "Error al cargar promociones",
       );
       setPromociones(res.data || []);
@@ -54,16 +59,30 @@ export function useCatalogo() {
   };
 
   const fetchProductos = useCallback(async (currentPage: number, isRefresh = false) => {
-    // Cancela el request anterior
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
-    setLoadingProductos(true);
-
     const { searchQuery: sq, categoriaActiva: ca } = filtersRef.current;
+    const cacheKey = getCacheKey(sq, ca, currentPage);
+
+    if (cacheProductos[cacheKey] && !isRefresh) {
+      if (currentPage === 1) {
+        setProductos(cacheProductos[cacheKey]);
+      } else {
+        setProductos((prev) => [...prev, ...cacheProductos[cacheKey]]);
+      }
+      setHasMore(cacheHasMore[cacheKey] ?? false);
+      pageRef.current = currentPage;
+      setLoadingProductos(false);
+      setLoadingInit(false);
+      setApplyingFilters(false);
+      return;
+    }
+
+    setLoadingProductos(true);
 
     try {
       const params = new URLSearchParams({
@@ -76,27 +95,29 @@ export function useCatalogo() {
       const res = await httpClient.getAuth<PaginatedResponseCatalogo<ProductoCatalogo>>(
         `/api/catalogo?${params.toString()}`,
         "Error al cargar productos",
-        controller.signal, // <-- signal para cancelar a nivel de red
+        controller.signal,
       );
 
-      // Si fue abortado mientras esperaba, descartamos
       if (controller.signal.aborted) return;
 
       const newData = res.data || [];
+      const morePages = currentPage < res.last_page;
 
-      if (isRefresh) {
+      cacheProductos[cacheKey] = newData;
+      cacheHasMore[cacheKey] = morePages;
+
+      if (isRefresh || currentPage === 1) {
         setProductos(newData);
       } else {
         setProductos((prev) => [...prev, ...newData]);
       }
 
-      setHasMore(currentPage < res.last_page);
+      setHasMore(morePages);
       pageRef.current = currentPage;
     } catch (error: any) {
       if (error?.name === "AbortError") return;
       console.error(error);
     } finally {
-      // Solo toca el estado si este controller sigue siendo el activo
       if (abortControllerRef.current === controller) {
         setLoadingProductos(false);
         setLoadingInit(false);
@@ -114,6 +135,9 @@ export function useCatalogo() {
   }, [loadingProductos, hasMore, fetchProductos]);
 
   const refreshAll = useCallback(() => {
+    Object.keys(cacheProductos).forEach((k) => delete cacheProductos[k]);
+    Object.keys(cacheHasMore).forEach((k) => delete cacheHasMore[k]);
+
     setRefreshing(true);
     pageRef.current = 1;
     setPage(1);
@@ -127,7 +151,7 @@ export function useCatalogo() {
     setProductos([]);
     pageRef.current = 1;
     setPage(1);
-    fetchProductos(1, true);
+    fetchProductos(1, false);
   }, [fetchProductos]);
 
   return {
