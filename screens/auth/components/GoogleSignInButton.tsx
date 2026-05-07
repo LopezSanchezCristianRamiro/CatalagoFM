@@ -1,5 +1,5 @@
 // screens/auth/components/GoogleSignInButton.tsx
-import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import React from "react";
 import { ActivityIndicator, TouchableOpacity } from "react-native";
 import { ThemedText } from "../../../components/ThemedText";
@@ -23,13 +23,19 @@ export function GoogleSignInButton() {
         onPress={startGoogleSignIn}
         disabled={!requestReady || loading}
         activeOpacity={0.8}
-        className="w-full h-12 flex-row items-center justify-center gap-3 bg-white border border-border rounded-lg mt-2"
+        className="w-full h-12 flex-row items-center justify-center gap-3 bg-white border border-border rounded-lg"
       >
         {loading ? (
           <ActivityIndicator size="small" color="#7C3AED" />
         ) : (
           <>
-            <Ionicons name="logo-google" size={20} color="#DB4437" />
+            <Image
+              source={{
+                uri: "https://developers.google.com/identity/images/g-logo.png",
+              }}
+              style={{ width: 20, height: 20 }}
+              resizeMode="contain"
+            />
             <ThemedText className="font-semibold text-foreground">
               Continuar con Google
             </ThemedText>

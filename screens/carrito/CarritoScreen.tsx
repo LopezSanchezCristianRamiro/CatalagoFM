@@ -50,18 +50,19 @@ export default function CarritoScreen() {
   }));
 
   const onQrConfirmado = useCallback(async () => {
-    await ejecutarCrearPedido("qr");
+    await ejecutarCrearPedido("qr", "pagado");
   }, [items]);
 
   const { estadoQr, qrData, isVerifying, generarQr, verificarPago, resetQr } =
     useQrPago(onQrConfirmado);
 
   const ejecutarCrearPedido = useCallback(
-    async (tipoPago: string) => {
+    async (tipoPago: string, estado?: string) => {
       setLoading(true);
       try {
         await httpClient.postAuth("/api/pedidos", {
           tipoPago,
+          estado: estado ?? undefined,
           items: items.map((i) => ({
             idProducto: i.idProducto,
             cantidad: i.cantidad,
