@@ -91,9 +91,11 @@ export default function AdministradoresModal({ visible, onClose }: Props) {
   }, [visible]);
 
   const usuariosFiltrados = useMemo(() => {
-    const q = search.trim().toLowerCase();
+  const q = search.trim().toLowerCase();
 
-    return usuarios.filter((usuario) => {
+  return usuarios
+    .filter((usuario) => Number(usuario.idRol) !== 3)
+    .filter((usuario) => {
       const nombre = getNombreUsuario(usuario);
       const correo = usuario.correo || usuario.email || "";
 
@@ -104,7 +106,7 @@ export default function AdministradoresModal({ visible, onClose }: Props) {
         String(usuario.idUsuario).includes(q)
       );
     });
-  }, [usuarios, search]);
+}, [usuarios, search]);
 
   const cambiarRol = async () => {
     if (!cambioPendiente) return;
