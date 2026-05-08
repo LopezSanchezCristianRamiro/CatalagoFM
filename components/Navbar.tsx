@@ -328,13 +328,8 @@ export function Navbar({ isAdmin }: NavbarProps) {
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity
+           <TouchableOpacity
             onPress={() => router.push("/(tabs)/perfil")}
-            className={`p-1.5 rounded-full border border-border ${
-              pathname?.includes("perfil")
-                ? "bg-primary/10 border-primary/20"
-                : "bg-secondary/50"
-            }`}
           >
             <View className="rounded-full overflow-hidden w-8 h-8">
               {user?.foto ? (

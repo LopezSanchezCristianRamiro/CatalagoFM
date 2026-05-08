@@ -26,6 +26,7 @@ interface AuthContextType {
   isAdmin: boolean;
   login: (token: string) => Promise<void>;
   logout: () => Promise<void>;
+  updateProfile: (data: { telefono?: string }) => Promise<void>;
 }
 updateProfile: (data: { nombre?: string; telefono?: string }) => Promise<void>;
 
@@ -33,8 +34,8 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const updateProfile = async (data: { nombre?: string; telefono?: string }) => {
-    const res = await httpClient.putAuth<{ user: Usuario }>("/api/user/profile", data);
-    setUser(res.user);
+    const res = await httpClient.putAuth<{ telefono: string }>("/api/user/profile", data);
+    setUser((prev) => prev ? { ...prev, telefono: res.telefono } : prev);
   };
   const [user, setUser] = useState<Usuario | null>(null);
   const [loading, setLoading] = useState(true);
@@ -82,6 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAdmin: user?.rol === "Administrador",
         login,
         logout,
+        updateProfile,
       }}
     >
       {children}

@@ -15,6 +15,7 @@ import Animated, { FadeInUp, FadeOutUp } from "react-native-reanimated";
 import Toast from "react-native-toast-message";
 import { ThemedText } from "../../components/ThemedText";
 import { useAuth } from "../../contexts/AuthContext";
+import { EditarTelefonoModal } from "./components/EditarTelefonoModal";
 import { usePedidos } from "./hooks/usePedidos";
 import type { Pedido } from "./types/pedido.types";
 
@@ -89,9 +90,11 @@ function DetallePedido({ item }: { item: Pedido }) {
 }
 
 export default function PerfilScreen() {
-  const { user, loading: authLoading, logout } = useAuth();
+  const { user, loading: authLoading, logout, updateProfile } = useAuth();
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [savingTelefono, setSavingTelefono] = useState(false);
 
   const {
     pedidos,
@@ -105,6 +108,30 @@ export default function PerfilScreen() {
   const toggleExpand = (id: number) => {
     setExpandedId((prev) => (prev === id ? null : id));
   };
+
+  const handleGuardarTelefono = useCallback(
+    async (nuevoTelefono: string) => {
+      setSavingTelefono(true);
+      try {
+        await updateProfile({ telefono: nuevoTelefono });
+        setModalVisible(false);
+        Toast.show({
+          type: "success",
+          text1: "Teléfono actualizado",
+          text2: "Tu número fue guardado correctamente",
+        });
+      } catch {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "No se pudo actualizar el teléfono",
+        });
+      } finally {
+        setSavingTelefono(false);
+      }
+    },
+    [updateProfile]
+  );
 
   const handleLogout = useCallback(async () => {
     setLoggingOut(true);
@@ -263,11 +290,30 @@ export default function PerfilScreen() {
             {user.correo}
           </ThemedText>
         </View>
-        <View className="flex-row justify-between py-2">
+        <View className="flex-row justify-between py-2 border-b border-border">
           <ThemedText className="text-sm font-medium">Rol</ThemedText>
           <ThemedText className="text-sm text-muted-foreground">
             {user.rol}
           </ThemedText>
+        </View>
+        <View className="flex-row justify-between items-center py-2">
+          <ThemedText className="text-sm font-medium">Teléfono</ThemedText>
+          <View className="flex-row items-center gap-2">
+            <ThemedText className="text-sm text-muted-foreground">
+              {user.telefono
+                ? user.telefono.includes("|")
+                  ? `+${user.telefono.split("|")[0]} ${user.telefono.split("|")[1]}`
+                  : user.telefono
+                : "No registrado"}
+            </ThemedText>
+            <TouchableOpacity
+              onPress={() => setModalVisible(true)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              className="bg-violet-50 rounded-full p-1.5"
+            >
+              <Ionicons name="pencil-outline" size={16} color="#7C3AED" />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
@@ -340,6 +386,13 @@ export default function PerfilScreen() {
 
   return (
     <View className="flex-1 bg-background">
+      <EditarTelefonoModal
+        visible={modalVisible}
+        telefonoActual={user.telefono ?? ""}
+        onClose={() => setModalVisible(false)}
+        onConfirm={handleGuardarTelefono}
+        saving={savingTelefono}
+      />
       <View className="flex-1 w-full max-w-lg mx-auto px-6">
         <FlatList
           data={pedidos}
