@@ -1,4 +1,4 @@
-// screens/perfil/PefilScreen.tsx
+// screens/perfil/PerfilScreen.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
@@ -15,10 +15,15 @@ import Animated, { FadeInUp, FadeOutUp } from "react-native-reanimated";
 import Toast from "react-native-toast-message";
 import { ThemedText } from "../../components/ThemedText";
 import { useAuth } from "../../contexts/AuthContext";
+import { useResponsive } from "../../hooks/useResponsive";
 import { EditarTelefonoModal } from "./components/EditarTelefonoModal";
+import { PerfilInfo } from "./components/PerfilInfo";
 import { usePedidos } from "./hooks/usePedidos";
 import type { Pedido } from "./types/pedido.types";
 
+// -------------------------------------------------------
+// ESTADO COLOR & LABEL
+// -------------------------------------------------------
 const estadoColor: Record<Pedido["estado"], string> = {
   pendiente: "bg-yellow-100 text-yellow-800",
   pagado: "bg-green-100 text-green-800",
@@ -33,13 +38,15 @@ const estadoLabel: Record<Pedido["estado"], string> = {
   entregado: "Entregado",
 };
 
-// Componente separado para detalle (necesario para animaciones de Reanimated)
+// -------------------------------------------------------
+// DETALLE DEL PEDIDO
+// -------------------------------------------------------
 function DetallePedido({ item }: { item: Pedido }) {
   return (
     <Animated.View
       entering={FadeInUp.duration(250)}
       exiting={FadeOutUp.duration(200)}
-      className=" px-4 pb-4 overflow-hidden"
+      className="px-4 pb-4 overflow-hidden"
     >
       <View className="border-t border-border pt-3 mt-1" />
       <ThemedText className="text-xs text-center font-semibold mb-2 text-foreground">
@@ -53,7 +60,6 @@ function DetallePedido({ item }: { item: Pedido }) {
             key={det.idDetallePedido}
             className="flex-row items-center px-5 py-2 pb-2 border-b border-border/50 last:border-b-0"
           >
-            {/* Contenedor de imagen con dimensiones fijas */}
             <View className="w-12 h-12 rounded-lg bg-muted overflow-hidden mr-3">
               {imgSrc ? (
                 <Image
@@ -69,7 +75,6 @@ function DetallePedido({ item }: { item: Pedido }) {
               )}
             </View>
 
-            {/* Información del producto */}
             <View className="flex-1">
               <ThemedText className="text-sm font-medium text-foreground">
                 {det.producto.nombre}
@@ -89,9 +94,13 @@ function DetallePedido({ item }: { item: Pedido }) {
   );
 }
 
+// -------------------------------------------------------
+// PANTALLA PRINCIPAL
+// -------------------------------------------------------
 export default function PerfilScreen() {
   const { user, loading: authLoading, logout, updateProfile } = useAuth();
   const router = useRouter();
+  const { isDesktop } = useResponsive();
   const [loggingOut, setLoggingOut] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [savingTelefono, setSavingTelefono] = useState(false);
@@ -130,7 +139,7 @@ export default function PerfilScreen() {
         setSavingTelefono(false);
       }
     },
-    [updateProfile]
+    [updateProfile],
   );
 
   const handleLogout = useCallback(async () => {
@@ -154,7 +163,6 @@ export default function PerfilScreen() {
     }
   }, [logout, router]);
 
-  // ---------- estados de carga y no autenticado (sin cambios) ----------
   if (authLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
@@ -183,15 +191,13 @@ export default function PerfilScreen() {
 
   const renderPedido = ({ item, index }: { item: Pedido; index: number }) => {
     const isExpanded = expandedId === item.idPedido;
-
     return (
       <Animated.View entering={FadeInUp.duration(300).delay(index * 80)}>
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={() => toggleExpand(item.idPedido)}
-          className="bg-white rounded-xl border border-border mb-4 overflow-hidden shadow-soft"
+          className="bg-white rounded-xl border border-border mb-4 overflow-hidden shadow-sm"
         >
-          {/* Cabecera */}
           <View className="p-4">
             <View className="flex-row justify-between items-center mb-2">
               <ThemedText className="text-sm font-bold text-foreground">
@@ -207,7 +213,6 @@ export default function PerfilScreen() {
                     {estadoLabel[item.estado]}
                   </ThemedText>
                 </View>
-                {/* Icono de expandir/colapsar */}
                 <Ionicons
                   name={isExpanded ? "chevron-up" : "chevron-down"}
                   size={18}
@@ -249,113 +254,11 @@ export default function PerfilScreen() {
             )}
           </View>
 
-          {/* Sección expandible con animación */}
           {isExpanded && <DetallePedido item={item} />}
         </TouchableOpacity>
       </Animated.View>
     );
   };
-
-  const renderHeader = () => (
-    <View className="mb-6">
-      {/* Avatar */}
-      <View className="self-center mb-6 mt-20">
-        {user.foto ? (
-          <Image
-            source={{ uri: user.foto }}
-            style={{ width: 96, height: 96, borderRadius: 48 }}
-            contentFit="cover"
-          />
-        ) : (
-          <View className="w-24 h-24 bg-muted rounded-full items-center justify-center">
-            <ThemedText className="text-3xl font-bold text-muted-foreground">
-              {user.nombres?.charAt(0)?.toUpperCase() ?? "U"}
-            </ThemedText>
-          </View>
-        )}
-      </View>
-
-      <ThemedText className="text-2xl font-bold text-center mb-2">
-        {user.nombres}
-      </ThemedText>
-      <ThemedText className="text-base text-muted-foreground text-center mb-6">
-        @{user.nombreUsuario}
-      </ThemedText>
-
-      {/* Tarjeta de información */}
-      <View className="bg-white rounded-xl border border-border p-4 mb-6">
-        <View className="flex-row justify-between py-2 border-b border-border">
-          <ThemedText className="text-sm font-medium">Correo</ThemedText>
-          <ThemedText className="text-sm text-muted-foreground">
-            {user.correo}
-          </ThemedText>
-        </View>
-        <View className="flex-row justify-between py-2 border-b border-border">
-          <ThemedText className="text-sm font-medium">Rol</ThemedText>
-          <ThemedText className="text-sm text-muted-foreground">
-            {user.rol}
-          </ThemedText>
-        </View>
-        <View className="flex-row justify-between items-center py-2">
-          <ThemedText className="text-sm font-medium">Teléfono</ThemedText>
-          <View className="flex-row items-center gap-2">
-            <ThemedText className="text-sm text-muted-foreground">
-              {user.telefono
-                ? user.telefono.includes("|")
-                  ? `+${user.telefono.split("|")[0]} ${user.telefono.split("|")[1]}`
-                  : user.telefono
-                : "No registrado"}
-            </ThemedText>
-            <TouchableOpacity
-              onPress={() => setModalVisible(true)}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              className="bg-violet-50 rounded-full p-1.5"
-            >
-              <Ionicons name="pencil-outline" size={16} color="#7C3AED" />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-
-      {/* Botón cerrar sesión */}
-      <TouchableOpacity
-        className={`btn-tap-active h-12 bg-primary rounded-lg items-center justify-center mb-6 ${loggingOut ? "opacity-70" : ""}`}
-        onPress={handleLogout}
-        disabled={loggingOut}
-      >
-        {loggingOut ? (
-          <ActivityIndicator color="#FFFFFF" />
-        ) : (
-          <ThemedText className="text-primary-foreground text-base font-semibold">
-            Cerrar sesión
-          </ThemedText>
-        )}
-      </TouchableOpacity>
-
-      {/* Encabezado de lista de pedidos */}
-      <View className="flex-row items-center justify-between mb-3">
-        <ThemedText className="text-lg font-bold text-foreground">
-          Mis Pedidos
-        </ThemedText>
-        <TouchableOpacity
-          onPress={clearAndRefetch}
-          disabled={pedidosLoading}
-          className="flex-row items-center space-x-1"
-        >
-          {pedidosLoading ? (
-            <ActivityIndicator size="small" color="#7C3AED" />
-          ) : (
-            <>
-              <Ionicons name="refresh" size={16} color="#7C3AED" />
-              <ThemedText className="text-sm text-primary">
-                Actualizar
-              </ThemedText>
-            </>
-          )}
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
 
   const renderEmpty = () => (
     <View className="items-center py-10">
@@ -369,21 +272,47 @@ export default function PerfilScreen() {
   const renderError = () => (
     <View className="items-center py-10">
       <Ionicons name="alert-circle-outline" size={48} color="#EF4444" />
-      <ThemedText className="text-status-error text-base mt-3">
+      <ThemedText className="text-red-500 text-base mt-3">
         {pedidosError}
       </ThemedText>
       <TouchableOpacity
         onPress={clearAndRefetch}
-        className="mt-3 flex-row items-center"
+        className="mt-3 flex-row items-center bg-red-50 px-4 py-2 rounded-full"
       >
-        <Ionicons name="refresh" size={18} color="#7C3AED" />
-        <ThemedText className="text-primary font-semibold ml-1">
+        <Ionicons name="refresh" size={18} color="#EF4444" />
+        <ThemedText className="text-red-600 font-semibold ml-2">
           Reintentar
         </ThemedText>
       </TouchableOpacity>
     </View>
   );
 
+  // Cabecera original para la versión móvil
+  const ListaPedidosHeader = () => (
+    <View className="flex-row items-center justify-between mb-3">
+      <ThemedText className="text-lg font-bold text-foreground">
+        Mis Pedidos
+      </ThemedText>
+      <TouchableOpacity
+        onPress={clearAndRefetch}
+        disabled={pedidosLoading}
+        className="flex-row items-center space-x-1"
+      >
+        {pedidosLoading ? (
+          <ActivityIndicator size="small" color="#7C3AED" />
+        ) : (
+          <>
+            <Ionicons name="refresh" size={16} color="#7C3AED" />
+            <ThemedText className="text-sm text-primary font-medium">
+              Actualizar
+            </ThemedText>
+          </>
+        )}
+      </TouchableOpacity>
+    </View>
+  );
+
+  // ========== LAYOUT RESPONSIVO ==========
   return (
     <View className="flex-1 bg-background">
       <EditarTelefonoModal
@@ -393,27 +322,120 @@ export default function PerfilScreen() {
         onConfirm={handleGuardarTelefono}
         saving={savingTelefono}
       />
-      <View className="flex-1 w-full max-w-lg mx-auto px-6">
-        <FlatList
-          data={pedidos}
-          keyExtractor={(item) => item.idPedido.toString()}
-          renderItem={renderPedido}
-          ListHeaderComponent={renderHeader}
-          ListEmptyComponent={
-            pedidosLoading ? null : pedidosError ? renderError() : renderEmpty()
-          }
-          contentContainerStyle={{ paddingBottom: 32 }}
-          refreshControl={
-            <RefreshControl
-              refreshing={false}
-              onRefresh={clearAndRefetch}
-              tintColor="#7C3AED"
-              colors={["#7C3AED"]}
+
+      {isDesktop ? (
+        // -----------------------------------------------
+        // ESCRITORIO: Layout Moderno Estilo Dashboard
+        // -----------------------------------------------
+        <View className="flex-1 flex-row max-w-7xl mx-auto w-full px-8 py-10 gap-8">
+          {/* PANEL IZQUIERDO: Tarjeta Flotante de Perfil */}
+          <View className="w-[320px] bg-white rounded-3xl p-6 shadow-sm border border-border h-fit self-start">
+            <PerfilInfo
+              user={user}
+              loggingOut={loggingOut}
+              onEditTelefono={() => setModalVisible(true)}
+              onLogout={handleLogout}
+              compact={false}
             />
-          }
-          showsVerticalScrollIndicator={false}
-        />
-      </View>
+          </View>
+
+          {/* PANEL DERECHO: Tarjeta Principal de Pedidos */}
+          <View className="flex-1 bg-white rounded-3xl p-8 shadow-sm border border-border">
+            <FlatList
+              data={pedidos}
+              keyExtractor={(item) => item.idPedido.toString()}
+              renderItem={renderPedido}
+              // Cabecera premium exclusiva para escritorio
+              ListHeaderComponent={
+                <View className="mb-6 pb-5 border-b border-border/50 flex-row justify-between items-end">
+                  <View>
+                    <ThemedText className="text-3xl font-extrabold text-foreground tracking-tight">
+                      Historial de Pedidos
+                    </ThemedText>
+                    <ThemedText className="text-sm text-muted-foreground mt-1">
+                      Administra y revisa el detalle de tus compras recientes.
+                    </ThemedText>
+                  </View>
+                  <TouchableOpacity
+                    onPress={clearAndRefetch}
+                    disabled={pedidosLoading}
+                    className="flex-row items-center bg-primary/10 hover:bg-primary/20 px-5 py-2.5 rounded-2xl transition-colors"
+                  >
+                    {pedidosLoading ? (
+                      <ActivityIndicator size="small" color="#7C3AED" />
+                    ) : (
+                      <>
+                        <Ionicons name="refresh" size={18} color="#7C3AED" />
+                        <ThemedText className="text-sm font-bold text-primary ml-2">
+                          Actualizar Datos
+                        </ThemedText>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              }
+              ListEmptyComponent={
+                pedidosLoading
+                  ? null
+                  : pedidosError
+                    ? renderError()
+                    : renderEmpty()
+              }
+              contentContainerStyle={{ paddingBottom: 32 }}
+              refreshControl={
+                <RefreshControl
+                  refreshing={false}
+                  onRefresh={clearAndRefetch}
+                  tintColor="#7C3AED"
+                  colors={["#7C3AED"]}
+                />
+              }
+              showsVerticalScrollIndicator={false}
+            />
+          </View>
+        </View>
+      ) : (
+        // -----------------------------------------------
+        // MÓVIL: layout clásico (una sola columna)
+        // -----------------------------------------------
+        <View className="flex-1 w-full max-w-lg mx-auto px-6">
+          <FlatList
+            data={pedidos}
+            keyExtractor={(item) => item.idPedido.toString()}
+            renderItem={renderPedido}
+            ListHeaderComponent={
+              <>
+                <View className="mb-6 mt-4">
+                  <PerfilInfo
+                    user={user}
+                    loggingOut={loggingOut}
+                    onEditTelefono={() => setModalVisible(true)}
+                    onLogout={handleLogout}
+                  />
+                </View>
+                <ListaPedidosHeader />
+              </>
+            }
+            ListEmptyComponent={
+              pedidosLoading
+                ? null
+                : pedidosError
+                  ? renderError()
+                  : renderEmpty()
+            }
+            contentContainerStyle={{ paddingBottom: 32 }}
+            refreshControl={
+              <RefreshControl
+                refreshing={false}
+                onRefresh={clearAndRefetch}
+                tintColor="#7C3AED"
+                colors={["#7C3AED"]}
+              />
+            }
+            showsVerticalScrollIndicator={false}
+          />
+        </View>
+      )}
     </View>
   );
 }
