@@ -341,39 +341,40 @@ export default function PerfilScreen() {
 
           {/* PANEL DERECHO: Tarjeta Principal de Pedidos */}
           <View className="flex-1 bg-white rounded-3xl p-8 shadow-sm border border-border">
+            {/* Cabecera con título y botón alineados horizontalmente */}
+            <View className="flex-row justify-between items-start mb-6 pb-5 border-b border-border/50">
+              <View>
+                <ThemedText className="text-3xl font-extrabold text-foreground tracking-tight">
+                  Historial de Pedidos
+                </ThemedText>
+                <ThemedText className="text-sm text-muted-foreground mt-1">
+                  Administra y revisa el detalle de tus compras recientes.
+                </ThemedText>
+              </View>
+
+              {/* Botón de actualizar al lado del título */}
+              <TouchableOpacity
+                onPress={clearAndRefetch}
+                disabled={pedidosLoading}
+                className="flex-row items-center bg-primary/10 px-5 py-2.5 rounded-2xl"
+              >
+                {pedidosLoading ? (
+                  <ActivityIndicator size="small" color="#7C3AED" />
+                ) : (
+                  <>
+                    <Ionicons name="refresh" size={18} color="#7C3AED" />
+                    <ThemedText className="text-sm font-bold text-primary ml-2">
+                      Actualizar Datos
+                    </ThemedText>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+
             <FlatList
               data={pedidos}
               keyExtractor={(item) => item.idPedido.toString()}
               renderItem={renderPedido}
-              // Cabecera premium exclusiva para escritorio
-              ListHeaderComponent={
-                <View className="mb-6 pb-5 border-b border-border/50 flex-row justify-between items-end">
-                  <View>
-                    <ThemedText className="text-3xl font-extrabold text-foreground tracking-tight">
-                      Historial de Pedidos
-                    </ThemedText>
-                    <ThemedText className="text-sm text-muted-foreground mt-1">
-                      Administra y revisa el detalle de tus compras recientes.
-                    </ThemedText>
-                  </View>
-                  <TouchableOpacity
-                    onPress={clearAndRefetch}
-                    disabled={pedidosLoading}
-                    className="flex-row items-center bg-primary/10 hover:bg-primary/20 px-5 py-2.5 rounded-2xl transition-colors"
-                  >
-                    {pedidosLoading ? (
-                      <ActivityIndicator size="small" color="#7C3AED" />
-                    ) : (
-                      <>
-                        <Ionicons name="refresh" size={18} color="#7C3AED" />
-                        <ThemedText className="text-sm font-bold text-primary ml-2">
-                          Actualizar Datos
-                        </ThemedText>
-                      </>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              }
               ListEmptyComponent={
                 pedidosLoading
                   ? null
