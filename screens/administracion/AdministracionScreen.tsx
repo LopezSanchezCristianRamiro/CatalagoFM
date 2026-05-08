@@ -18,6 +18,7 @@ import AdministradoresModal from "./components/AdministradoresModal";
 import ClientesModal from "./components/ClientesModal";
 import PedidoCard from "./components/PedidoCard";
 import PedidosHoyModal from "./components/PedidosHoyModal";
+import ReporteButton from "./components/ReporteButton";
 import VentasCategoriasModal from "./components/VentasCategoriasModal";
 import { usePedidos } from "./hooks/usePedidos";
 
@@ -206,6 +207,7 @@ const esMaster = isMaster;
                   </ThemedText>
                 </Pressable>
               )}
+              <ReporteButton fechaInicio={fechaInicio} fechaFin={fechaFin} />
             </View>
           </View>
 
