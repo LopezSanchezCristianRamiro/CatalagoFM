@@ -1,13 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
-    ActivityIndicator,
-    Modal,
-    Platform,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Modal,
+  Platform,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { CountryPicker } from "react-native-country-codes-picker";
 import Toast from "react-native-toast-message";
@@ -21,6 +21,49 @@ interface Props {
   saving: boolean;
 }
 
+// ── Prefijos ordenados de mayor a menor longitud ──────────────────────────────
+const DIAL_CODES = [
+  "1684","1264","1268","1242","1246","1441","1284","1345","1767","1809",
+  "1829","1849","1473","1671","1876","1664","1670","1868","1649","1340",
+  "1758","1784","1869","1721","1767",
+  "599","598","597","596","595","594","593","592","591","590",
+  "386","385","383","382","381","380","374","373","372","371","370",
+  "358","357","356","354","353","352","351","350",
+  "269","268","267","266","265","264","263","262","261","260",
+  "998","996","994","993","992","977","976","975","974","973","972",
+  "971","970","968","967","966","965","964","963","962","961","960",
+  "886","880","856","855","853","852","850",
+  "66","65","64","63","62","61","60",
+  "55","54","53","52","51","49","48","47","46","45","44","43","41",
+  "40","39","36","34","33","32","31","30","27","20",
+  "7","1",
+];
+
+function parsePhone(raw: string): { code: string; num: string } {
+  if (!raw) return { code: "591", num: "" };
+
+  // Formato nuevo con separador  →  "591|79990071"
+  if (raw.includes("|")) {
+    const [code, num] = raw.split("|");
+    return { code, num };
+  }
+
+  // Formato viejo sin separador  →  "59179990071"
+  // Intentar detectar el prefijo comparando contra lista conocida
+  for (const code of DIAL_CODES) {
+    if (raw.startsWith(code)) {
+      const num = raw.slice(code.length);
+      // El número restante debe tener entre 6 y 12 dígitos para ser válido
+      if (num.length >= 6 && num.length <= 12) {
+        return { code, num };
+      }
+    }
+  }
+
+  // No se detectó prefijo → mostrar número completo, Bolivia por defecto
+  return { code: "591", num: raw };
+}
+
 export function EditarTelefonoModal({
   visible,
   telefonoActual,
@@ -28,9 +71,12 @@ export function EditarTelefonoModal({
   onConfirm,
   saving,
 }: Props) {
-  const [telefono, setTelefono] = useState(telefonoActual);
+  // ── Inicializar estado parseando el teléfono actual ───────────────────────
+  const parsedInicial = parsePhone(telefonoActual);
+  const [telefono, setTelefono] = useState(parsedInicial.num);
+  const [countryCode, setCountryCode] = useState(parsedInicial.code);
+
   const [confirmando, setConfirmando] = useState(false);
-  const [countryCode, setCountryCode] = useState("591");
   const [pickerVisible, setPickerVisible] = useState(false);
   const [pickerKey, setPickerKey] = useState(0);
 
@@ -38,7 +84,10 @@ export function EditarTelefonoModal({
 
   const handleClose = () => {
     setConfirmando(false);
-    setTelefono(telefonoActual);
+    // Resetear al valor actual también parseado correctamente
+    const p = parsePhone(telefonoActual);
+    setTelefono(p.num);
+    setCountryCode(p.code);
     setPickerKey((prev) => prev + 1);
     onClose();
   };
@@ -122,7 +171,9 @@ export function EditarTelefonoModal({
               </ThemedText>
 
               <View style={styles.telefonoBox}>
-                <ThemedText style={styles.telefonoNuevo}>{telefono}</ThemedText>
+                <ThemedText style={styles.telefonoNuevo}>
+                  +{countryCode} {telefono}
+                </ThemedText>
               </View>
 
               <View style={styles.actions}>
@@ -150,7 +201,7 @@ export function EditarTelefonoModal({
 
         </View>
       </View>
-    <CountryPicker
+      <CountryPicker
         key={pickerKey}
         show={pickerVisible}
         pickerButtonOnPress={(item) => {

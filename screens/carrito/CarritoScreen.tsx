@@ -75,7 +75,10 @@ export default function CarritoScreen() {
         Toast.show({
           type: "success",
           text1: "Pedido realizado",
-          text2: `Espera a que te contactemos por medio de tu teléfono celular`,
+          text2:
+            estado === "pagado"
+              ? "Recibimos tu pago. Espera a que te contactemos por medio de tu teléfono celular."
+              : "Espera a que te contactemos por medio de tu teléfono celular.",
         });
       } catch (e: any) {
         Alert.alert("Error", e.message || "Error al procesar pedido");
@@ -95,7 +98,7 @@ export default function CarritoScreen() {
 
   const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const intentosRef = useRef(0);
-  const MAX_INTENTOS = 120;
+  const MAX_INTENTOS = 24;
 
   const detenerPolling = () => {
     if (pollingRef.current) {
@@ -122,6 +125,11 @@ export default function CarritoScreen() {
 
       if (intentosRef.current > MAX_INTENTOS) {
         detenerPolling();
+        Toast.show({
+          type: "info",
+          text1: "Tiempo agotado",
+          text2: "No se detectó el pago en 2 minutos. Volvé a intentarlo.",
+        });
         resetQr();
         setSelectedPayment(null);
         setStep(2);
@@ -136,11 +144,11 @@ export default function CarritoScreen() {
         (estadoQr === "esperando" || estadoQr === "verificando");
 
       if (sigueActivo) {
-        pollingRef.current = setTimeout(ejecutarPolling, 1000);
+        pollingRef.current = setTimeout(ejecutarPolling, 5000);
       }
     };
 
-    pollingRef.current = setTimeout(ejecutarPolling, 1000);
+    pollingRef.current = setTimeout(ejecutarPolling, 5000);
 
     return detenerPolling;
   }, [step, selectedPayment, estadoQr, verificarPago, resetQr]);

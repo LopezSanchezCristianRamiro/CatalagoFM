@@ -1,6 +1,5 @@
 // useQrPago.ts
 import { useCallback, useRef, useState } from "react";
-import Toast from "react-native-toast-message";
 
 const API_BASE =
   process.env.EXPO_PUBLIC_QR_API_BASE?.trim() ||
@@ -75,11 +74,6 @@ export function useQrPago(onPagoConfirmado: () => Promise<void>) {
 
         if (pagoRealizado) {
           setEstadoQr("confirmado");
-          Toast.show({
-            type: "success",
-            text1: "Pago confirmado",
-            text2: "Redirigiendo al perfil para ver tu último pedido",
-          });
           await onPagoConfirmado();
         } else {
           setEstadoQr("esperando");
