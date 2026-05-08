@@ -155,7 +155,9 @@ function setStoredJson<T>(key: string, value: T) {
 }
 
 export default function NotificationsButton() {
-  const { isAdmin, user } = useAuth();
+  const { isAdmin, isMaster, user } = useAuth();
+
+const puedeVerNotificacionesAdmin = isAdmin || isMaster;
   const { width, height } = useWindowDimensions();
 
   const isMobile = width < 768;
@@ -192,7 +194,7 @@ export default function NotificationsButton() {
   };
 
   const cargarAdmin = async (mostrarCarga = false) => {
-    if (!user || !isAdmin) return;
+    if (!user || !puedeVerNotificacionesAdmin) return;
 
     try {
       if (mostrarCarga) setLoading(true);
@@ -277,13 +279,13 @@ export default function NotificationsButton() {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [isAdmin, user]);
+  }, [puedeVerNotificacionesAdmin, user]);
 
   const unreadCount = useMemo(() => {
     return notifications.filter((item) => !readIds.includes(item.id)).length;
   }, [notifications, readIds]);
 
-  if (!user || !isAdmin) return null;
+  if (!user || !puedeVerNotificacionesAdmin) return null;
 
   return (
     <>

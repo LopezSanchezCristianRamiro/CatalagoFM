@@ -12,9 +12,10 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useResponsive } from "../../hooks/useResponsive";
 
 export default function TabsLayout() {
-  const { loading, isAdmin, user } = useAuth();
+  const { loading, isAdmin, isMaster, user } = useAuth();
   const { isDesktop } = useResponsive();
-  
+
+  const puedeVerAdmin = isAdmin || isMaster;
 
   if (loading) {
     return (
@@ -27,7 +28,7 @@ export default function TabsLayout() {
   if (isDesktop) {
     return (
       <View className="flex-1 bg-background">
-        <Navbar isAdmin={isAdmin} />
+        <Navbar isAdmin={puedeVerAdmin} />
 
         <View className="flex-1">
           <Tabs tabBar={() => null} screenOptions={{ headerShown: false }}>
@@ -38,14 +39,14 @@ export default function TabsLayout() {
             <Tabs.Screen
               name="productos"
               options={{
-                href: isAdmin ? undefined : null,
+                href: puedeVerAdmin ? undefined : null,
               }}
             />
 
             <Tabs.Screen
               name="administracion"
               options={{
-                href: isAdmin ? undefined : null,
+                href: puedeVerAdmin ? undefined : null,
               }}
             />
           </Tabs>
@@ -59,7 +60,9 @@ export default function TabsLayout() {
   return (
     <View className="flex-1 bg-background">
       <Tabs
-        tabBar={(props) => <CustomTabBar {...props} isAdmin={isAdmin} />}
+        tabBar={(props) => (
+          <CustomTabBar {...props} isAdmin={puedeVerAdmin} />
+        )}
         screenOptions={{ headerShown: false }}
       >
         <Tabs.Screen
@@ -85,7 +88,7 @@ export default function TabsLayout() {
         <Tabs.Screen
           name="perfil"
           options={{
-            tabBarLabel: user ? (user.nombres?.split(" ")[0] ?? "") : "Perfil",
+            tabBarLabel: user ? user.nombres?.split(" ")[0] ?? "Perfil" : "Perfil",
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="person-circle-outline" size={size} color={color} />
             ),
@@ -95,7 +98,7 @@ export default function TabsLayout() {
         <Tabs.Screen
           name="productos"
           options={{
-            href: isAdmin ? undefined : null,
+            href: puedeVerAdmin ? undefined : null,
             tabBarLabel: "Productos",
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="add-circle-outline" size={size} color={color} />
@@ -106,7 +109,7 @@ export default function TabsLayout() {
         <Tabs.Screen
           name="administracion"
           options={{
-            href: isAdmin ? undefined : null,
+            href: puedeVerAdmin ? undefined : null,
             tabBarLabel: "Dueño",
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="bar-chart-outline" size={size} color={color} />

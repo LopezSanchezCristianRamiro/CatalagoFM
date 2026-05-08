@@ -3,7 +3,7 @@ import { Redirect } from "expo-router";
 import { useAuth } from "../../contexts/AuthContext";
 
 export default function ProductosTab() {
-  const { isAdmin } = useAuth();
-  if (!isAdmin) return <Redirect href="/(tabs)/catalogo" />;
+  const { isAdmin, isMaster } = useAuth();
+  if (!isAdmin && !isMaster) return <Redirect href="/(tabs)/catalogo" />;
   return <AdministracionScreen />;
 }

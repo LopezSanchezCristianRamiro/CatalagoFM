@@ -3,9 +3,9 @@ import { useAuth } from "../../contexts/AuthContext";
 import ProductosScreen from "../../screens/productos/ProductosScreen";
 
 export default function ProductosTab() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isMaster } = useAuth();
 
-  if (!isAdmin) {
+  if (!isAdmin && !isMaster) {
     return <Redirect href="/(tabs)/catalogo" />;
   }
 

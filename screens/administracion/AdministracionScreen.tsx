@@ -8,11 +8,13 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { ThemedText } from "../../components/ThemedText";
+import { useAuth } from "../../contexts/AuthContext";
 
 import AdminFilters from "./components/AdminFilters";
 import AdminHeader from "./components/AdminHeader";
 import AdminMetricCard from "./components/AdminMetricCard";
 import AdminSearchBar from "./components/AdminSearchBar";
+import AdministradoresModal from "./components/AdministradoresModal";
 import ClientesModal from "./components/ClientesModal";
 import PedidoCard from "./components/PedidoCard";
 import PedidosHoyModal from "./components/PedidosHoyModal";
@@ -44,6 +46,8 @@ function esMismaFechaOAntes(fecha: Date, fin: Date) {
 
 export default function AdministracionScreen() {
   const { pedidos, loading, actualizarEstado, refetch } = usePedidos();
+  const { isMaster } = useAuth();
+const esMaster = isMaster;
   const { width } = useWindowDimensions();
 
   const isMobile = width < 700;
@@ -58,6 +62,7 @@ export default function AdministracionScreen() {
   const [openPedidosHoy, setOpenPedidosHoy] = useState(false);
   const [openVentasCategorias, setOpenVentasCategorias] = useState(false);
   const [openClientes, setOpenClientes] = useState(false);
+  const [openAdministradores, setOpenAdministradores] = useState(false);
 
   const handleRefresh = async () => {
     await refetch();
@@ -84,7 +89,7 @@ export default function AdministracionScreen() {
 
   const totalPeriodo = pedidosPorPeriodo.reduce(
     (acc, pedido) => acc + Number(pedido.total || 0),
-    0,
+    0
   );
 
   const pedidosFiltrados = useMemo(() => {
@@ -114,7 +119,7 @@ export default function AdministracionScreen() {
           : pedido.detalles?.some((detalle) =>
               detalle.producto?.categoria?.nombre
                 ?.toLowerCase()
-                .includes(categoria.toLowerCase()),
+                .includes(categoria.toLowerCase())
             );
 
       const fechaPedido = new Date(pedido.fechaCreacion);
@@ -155,7 +160,7 @@ export default function AdministracionScreen() {
     pedidos
       .filter((pedido) => pedido.usuario?.idRol !== 1)
       .map((pedido) => pedido.usuario?.idUsuario)
-      .filter(Boolean),
+      .filter(Boolean)
   ).size;
 
   if (loading) {
@@ -179,7 +184,7 @@ export default function AdministracionScreen() {
           >
             <AdminHeader isMobile={isCompact} />
 
-            <View className={isCompact ? "w-full" : "w-[520px]"}>
+            <View className={isCompact ? "w-full gap-3" : "w-[520px] gap-3"}>
               <AdminSearchBar
                 search={search}
                 setSearch={setSearch}
@@ -189,6 +194,18 @@ export default function AdministracionScreen() {
                 setFechaFin={setFechaFin}
                 isMobile={isCompact}
               />
+
+              {esMaster && (
+                <Pressable
+                  onPress={() => setOpenAdministradores(true)}
+                  className="bg-[#8b2cff] rounded-2xl px-5 py-4 flex-row items-center justify-center gap-2 shadow-sm"
+                >
+                  <Ionicons name="person-add-outline" size={21} color="white" />
+                  <ThemedText className="text-white font-bold">
+                    Dar acceso a administrador
+                  </ThemedText>
+                </Pressable>
+              )}
             </View>
           </View>
 
@@ -273,6 +290,7 @@ export default function AdministracionScreen() {
           </View>
         </View>
       </ScrollView>
+
       <PedidosHoyModal
         visible={openPedidosHoy}
         pedidos={pedidosHoyLista}
@@ -292,6 +310,11 @@ export default function AdministracionScreen() {
         pedidos={pedidos}
         onClose={() => setOpenClientes(false)}
         onEstadoChange={actualizarEstado}
+      />
+
+      <AdministradoresModal
+        visible={openAdministradores}
+        onClose={() => setOpenAdministradores(false)}
       />
 
       <View className="absolute right-4 bottom-8 items-center gap-2">

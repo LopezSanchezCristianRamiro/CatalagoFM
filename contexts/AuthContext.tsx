@@ -1,4 +1,3 @@
-// contexts/AuthContext.tsx
 import {
   createContext,
   ReactNode,
@@ -16,7 +15,7 @@ export type Usuario = {
   apellido: string;
   correo: string;
   rol: string;
-  telefono: string; 
+  telefono: string;
   foto: string | null;
 };
 
@@ -24,24 +23,28 @@ interface AuthContextType {
   user: Usuario | null;
   loading: boolean;
   isAdmin: boolean;
+  isMaster: boolean;
   login: (token: string) => Promise<void>;
   logout: () => Promise<void>;
-  updateProfile: (data: { telefono?: string }) => Promise<void>;
+  updateProfile: (data: { nombre?: string; telefono?: string }) => Promise<void>;
 }
-updateProfile: (data: { nombre?: string; telefono?: string }) => Promise<void>;
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const updateProfile = async (data: { nombre?: string; telefono?: string }) => {
-    const res = await httpClient.putAuth<{ telefono: string }>("/api/user/profile", data);
-    setUser((prev) => prev ? { ...prev, telefono: res.telefono } : prev);
-  };
   const [user, setUser] = useState<Usuario | null>(null);
   const [loading, setLoading] = useState(true);
   const clearCart = useCartStore((state) => state.clearCart);
 
-  // Intenta cargar el perfil desde el servidor si existe sesión previa
+  const updateProfile = async (data: { nombre?: string; telefono?: string }) => {
+    const res = await httpClient.putAuth<{ telefono: string }>(
+      "/api/user/profile",
+      data
+    );
+
+    setUser((prev) => (prev ? { ...prev, telefono: res.telefono } : prev));
+  };
+
   useEffect(() => {
     (async () => {
       try {
@@ -57,9 +60,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (token: string) => {
-    // Guardar token de forma segura (en móvil; en web lo ignoramos)
     await saveToken(token);
-    // Tras almacenar el token, obtenemos el perfil completo del usuario
+
     const userData = await httpClient.getAuth<Usuario>("/api/user");
     setUser(userData);
   };
@@ -67,20 +69,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       await httpClient.postAuth("/api/logout", {});
-    } catch (e) {
+    } catch {
       // ignorar errores de red
     }
+
     await clearSession();
     clearCart();
     setUser(null);
   };
+
+  const isAdmin = user?.rol === "Administrador";
+  const isMaster = user?.rol === "Master";
 
   return (
     <AuthContext.Provider
       value={{
         user,
         loading,
-        isAdmin: user?.rol === "Administrador",
+        isAdmin,
+        isMaster,
         login,
         logout,
         updateProfile,
@@ -93,8 +100,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
+
   if (!context) {
     throw new Error("useAuth debe usarse dentro de un AuthProvider");
   }
+
   return context;
 }
