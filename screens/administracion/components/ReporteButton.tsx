@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, View } from "react-native";
+import { ActivityIndicator, Platform, Pressable, View } from "react-native";
 import Toast from "react-native-toast-message";
 import { ThemedText } from "../../../components/ThemedText";
 import { BASE_URL } from "../../../http/httpClient";
@@ -36,40 +36,74 @@ export default function ReporteButton({ fechaInicio, fechaFin }: Props) {
 
     const inicio = toApiDate(fechaInicio)!;
     const fin = toApiDate(fechaFin)!;
-    const fileUri = FileSystem.documentDirectory + `reporte_${inicio}_${fin}.pdf`;
+    const urlEndpoint = `${BASE_URL}/api/admin/reportes`;
 
     setDescargando(true);
     try {
       const token = await getToken();
+      
+      const requestOptions = {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/pdf',
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ 
+          fechaInicio: inicio, 
+          fechaFin: fin 
+        })
+      };
 
-      // ── downloadAsync escribe directo a disco sin pasar por JS ──────────────
-      // Evita el bucle arrayBufferToBase64 que bloqueaba el hilo principal.
-      // La API recibe los parámetros como query params porque downloadAsync
-      // no soporta body en POST; si necesitas POST usa el workaround de abajo.
-      const { status } = await FileSystem.downloadAsync(
-        `${BASE_URL}/api/admin/reportes?fechaInicio=${inicio}&fechaFin=${fin}`,
-        fileUri,
-        {
-          headers: {
-            Accept: "application/pdf",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-        }
-      );
+      const response = await fetch(urlEndpoint, requestOptions);
 
-      if (status !== 200) throw new Error(`Error del servidor: ${status}`);
+      if (!response.ok) {
+        throw new Error(`Error del servidor: ${response.status}`);
+      }
 
-      await Sharing.shareAsync(fileUri, {
-        mimeType: "application/pdf",
-        dialogTitle: "Reporte de ventas",
-        UTI: "com.adobe.pdf",
-      });
+      const blob = await response.blob();
+
+      if (Platform.OS === "web") {
+        // ─── DESCARGA EN WEB (Ignora downloadAsync) ──────────────────────────
+        const blobUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = `reporte_${inicio}_${fin}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(blobUrl);
+
+      } else {
+        // ─── DESCARGA EN MÓVIL (iOS / Android) ───────────────────────
+        const fileUri = FileSystem.documentDirectory + `reporte_${inicio}_${fin}.pdf`;
+        
+        const reader = new FileReader();
+        reader.onload = async () => {
+          const base64data = (reader.result as string).split(',')[1];
+          
+          await FileSystem.writeAsStringAsync(fileUri, base64data, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+
+          await Sharing.shareAsync(fileUri, {
+            mimeType: "application/pdf",
+            dialogTitle: "Reporte de ventas",
+            UTI: "com.adobe.pdf",
+          });
+
+          FileSystem.deleteAsync(fileUri, { idempotent: true }).catch(() => {});
+        };
+        
+        reader.readAsDataURL(blob);
+      }
 
       Toast.show({
         type: "success",
         text1: "Reporte generado",
         text2: `Del ${fechaInicio} al ${fechaFin}`,
       });
+
     } catch (e: any) {
       Toast.show({
         type: "error",
@@ -77,8 +111,6 @@ export default function ReporteButton({ fechaInicio, fechaFin }: Props) {
         text2: e.message ?? "Intenta de nuevo.",
       });
     } finally {
-      // Limpia el archivo temporal tras compartir
-      FileSystem.deleteAsync(fileUri, { idempotent: true }).catch(() => {});
       setDescargando(false);
     }
   };
