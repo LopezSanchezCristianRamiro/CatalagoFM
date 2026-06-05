@@ -144,11 +144,11 @@ export default function CarritoScreen() {
         (estadoQr === "esperando" || estadoQr === "verificando");
 
       if (sigueActivo) {
-        pollingRef.current = setTimeout(ejecutarPolling, 5000);
+        pollingRef.current = setTimeout(ejecutarPolling, 8000);
       }
     };
 
-    pollingRef.current = setTimeout(ejecutarPolling, 5000);
+    pollingRef.current = setTimeout(ejecutarPolling, 8000);
 
     return detenerPolling;
   }, [step, selectedPayment, estadoQr, verificarPago, resetQr]);

@@ -3,7 +3,7 @@ import { useCallback, useRef, useState } from "react";
 
 const API_BASE =
   process.env.EXPO_PUBLIC_QR_API_BASE?.trim() ||
-  "https://sistemapagoqr.grupo-lobos.com/api/economico";
+  "https://sistemapayqr.metasoft-bolivia.com/api/economico/1/qr";
 
 export type EstadoQr =
   | "idle"
@@ -26,7 +26,7 @@ export function useQrPago(onPagoConfirmado: () => Promise<void>) {
     async (monto: number, descripcion = "Pago de pedido") => {
       setEstadoQr("generando");
       try {
-        const res = await fetch(`${API_BASE}/generar-qr`, {
+        const res = await fetch(`${API_BASE}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -39,7 +39,7 @@ export function useQrPago(onPagoConfirmado: () => Promise<void>) {
         const json = await res.json();
         if (json?.ok && montadoRef.current) {
           setQrData(json);
-          qrIdRef.current = json.qrId;
+          qrIdRef.current = json.qr_id;
           setEstadoQr("esperando");
         } else {
           throw new Error();
@@ -63,10 +63,10 @@ export function useQrPago(onPagoConfirmado: () => Promise<void>) {
       }
 
       try {
-        const res = await fetch(`${API_BASE}/verificar-qr`, {
+        const res = await fetch(`${API_BASE}/verificar`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ qrId: qrIdRef.current }),
+          body: JSON.stringify({ qr_id: qrIdRef.current }),
         });
         const json = await res.json();
         const pagoRealizado =

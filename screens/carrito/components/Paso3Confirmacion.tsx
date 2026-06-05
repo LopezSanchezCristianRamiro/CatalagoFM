@@ -91,7 +91,7 @@ export function Paso3Confirmacion({
                 ) : qrData &&
                   (estadoQr === "esperando" || estadoQr === "verificando") ? (
                   <Image
-                    source={{ uri: `data:image/png;base64,${qrData.qrImage}` }}
+                    source={{ uri: `data:image/png;base64,${qrData.qr_image}` }}
                     className="w-full h-full"
                     resizeMode="contain"
                   />
