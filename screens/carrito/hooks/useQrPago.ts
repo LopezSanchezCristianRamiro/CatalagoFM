@@ -1,9 +1,12 @@
 // useQrPago.ts
 import { useCallback, useRef, useState } from "react";
 
+const TOKEN =
+  process.env.EXPO_PUBLIC_QR_TOKEN?.trim() ||
+  "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6";
 const API_BASE =
   process.env.EXPO_PUBLIC_QR_API_BASE?.trim() ||
-  "https://sistemapayqr.metasoft-bolivia.com/api/economico/1/qr";
+  "https://sistemapayqr.metasoft-bolivia.com/api/economico";
 
 export type EstadoQr =
   | "idle"
@@ -23,17 +26,32 @@ export function useQrPago(onPagoConfirmado: () => Promise<void>) {
   const qrIdRef = useRef<string | null>(null);
 
   const generarQr = useCallback(
-    async (monto: number, descripcion = "Pago de pedido") => {
+    async (
+      monto: number,
+      descripcion = "Pago de pedido",
+      branchCode = "",
+      codigoServicio = "",
+    ) => {
+      if (!TOKEN) {
+        setEstadoQr("error");
+        setErrorMsg("Token no configurado");
+        return;
+      }
+
       setEstadoQr("generando");
       try {
-        const res = await fetch(`${API_BASE}`, {
+        const res = await fetch(`${API_BASE}/qr`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            monto: String(monto),
-            moneda: "BOB",
-            descripcion,
-            branchCode: "",
+            empresa: { TOKEN },
+            qr: {
+              monto,
+              moneda: "BOB",
+              descripcion,
+              branchCode,
+              codigoServicio,
+            },
           }),
         });
         const json = await res.json();
@@ -42,35 +60,43 @@ export function useQrPago(onPagoConfirmado: () => Promise<void>) {
           qrIdRef.current = json.qr_id;
           setEstadoQr("esperando");
         } else {
-          throw new Error();
+          throw new Error(json?.message || "Error al generar QR");
         }
-      } catch {
+      } catch (error: any) {
         setEstadoQr("error");
-        setErrorMsg("No se pudo generar el QR");
+        setErrorMsg(error.message || "No se pudo generar el QR");
       }
     },
-    [],
+    [TOKEN],
   );
 
   const verificarPago = useCallback(
     async (silencioso = false) => {
       if (!qrIdRef.current || estadoQr === "confirmado") return;
+      if (!TOKEN) {
+        setEstadoQr("error");
+        setErrorMsg("Token no configurado");
+        return;
+      }
 
-      // Si no es silencioso (clic manual), mostrar cargando. Si es polling, no mover la UI.
       if (!silencioso) {
         setIsVerifying(true);
         setEstadoQr("verificando");
       }
 
       try {
-        const res = await fetch(`${API_BASE}/verificar`, {
+        const res = await fetch(`${API_BASE}/qr/verificar`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ qr_id: qrIdRef.current }),
+          body: JSON.stringify({
+            empresa: { TOKEN },
+            qr: { qr_id: qrIdRef.current },
+          }),
         });
         const json = await res.json();
-        const pagoRealizado =
-          json?.estado !== 0 || json?.body?.statusQrCode !== 0;
+
+        // Según documentación, estado: 1 = pagado
+        const pagoRealizado = json?.estado === 1;
 
         if (pagoRealizado) {
           setEstadoQr("confirmado");
@@ -78,13 +104,13 @@ export function useQrPago(onPagoConfirmado: () => Promise<void>) {
         } else {
           setEstadoQr("esperando");
         }
-      } catch {
+      } catch (error) {
         setEstadoQr("esperando");
       } finally {
         setIsVerifying(false);
       }
     },
-    [onPagoConfirmado, estadoQr],
+    [TOKEN, onPagoConfirmado, estadoQr],
   );
 
   return {
@@ -98,6 +124,7 @@ export function useQrPago(onPagoConfirmado: () => Promise<void>) {
       setEstadoQr("idle");
       setQrData(null);
       qrIdRef.current = null;
+      setErrorMsg(null);
     },
   };
 }
