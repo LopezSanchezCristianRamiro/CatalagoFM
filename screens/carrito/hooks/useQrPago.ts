@@ -1,9 +1,9 @@
 // useQrPago.ts
 import { useCallback, useRef, useState } from "react";
 
-const TOKEN =
+const token =
   process.env.EXPO_PUBLIC_QR_TOKEN?.trim() ||
-  "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6";
+  "1qEw0ty2xYmc53xBMZ2U7ExFstjl25oy";
 const API_BASE =
   process.env.EXPO_PUBLIC_QR_API_BASE?.trim() ||
   "https://sistemapayqr.metasoft-bolivia.com/api/economico";
@@ -32,7 +32,7 @@ export function useQrPago(onPagoConfirmado: () => Promise<void>) {
       branchCode = "",
       codigoServicio = "",
     ) => {
-      if (!TOKEN) {
+      if (!token) {
         setEstadoQr("error");
         setErrorMsg("Token no configurado");
         return;
@@ -44,7 +44,7 @@ export function useQrPago(onPagoConfirmado: () => Promise<void>) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            empresa: { TOKEN },
+            empresa: { token },
             qr: {
               monto,
               moneda: "BOB",
@@ -67,13 +67,13 @@ export function useQrPago(onPagoConfirmado: () => Promise<void>) {
         setErrorMsg(error.message || "No se pudo generar el QR");
       }
     },
-    [TOKEN],
+    [token],
   );
 
   const verificarPago = useCallback(
     async (silencioso = false) => {
       if (!qrIdRef.current || estadoQr === "confirmado") return;
-      if (!TOKEN) {
+      if (!token) {
         setEstadoQr("error");
         setErrorMsg("Token no configurado");
         return;
@@ -89,7 +89,7 @@ export function useQrPago(onPagoConfirmado: () => Promise<void>) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            empresa: { TOKEN },
+            empresa: { token },
             qr: { qr_id: qrIdRef.current },
           }),
         });
@@ -110,7 +110,7 @@ export function useQrPago(onPagoConfirmado: () => Promise<void>) {
         setIsVerifying(false);
       }
     },
-    [TOKEN, onPagoConfirmado, estadoQr],
+    [token, onPagoConfirmado, estadoQr],
   );
 
   return {
