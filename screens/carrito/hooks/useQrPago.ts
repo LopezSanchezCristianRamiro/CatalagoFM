@@ -3,7 +3,7 @@ import { useCallback, useRef, useState } from "react";
 
 const token =
   process.env.EXPO_PUBLIC_QR_TOKEN?.trim() ||
-  "1qEw0ty2xYmc53xBMZ2U7ExFstjl25oy";
+  "TT01btd81oRazrjeusEihYpe0dFq7pfA";
 const API_BASE =
   process.env.EXPO_PUBLIC_QR_API_BASE?.trim() ||
   "https://sistemapayqr.metasoft-bolivia.com/api/economico";
